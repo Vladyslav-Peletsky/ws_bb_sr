@@ -40,6 +40,15 @@ function onConnect(wsClient) {
                     }, 2000);
                     break;
                 default:
+                const errorComand = {
+                                        "type":"error",
+                                        "data":{
+                                        "requestType":"connection",
+                                        "errorCode":"ERROR_INTERNAL_SERVER_ERROR",
+                                        "errorDescription":"Неизвестная команда"
+                                        }
+                                    }    
+                wsClient.send(errorComand);    
                     console.log('Неизвестная команда');
                     break;
             }
