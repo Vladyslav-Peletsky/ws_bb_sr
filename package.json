@@ -1,0 +1,15 @@
+{
+  "name": "ws_bb_sr",
+  "version": "1.0.0",
+  "description": "websocket-сервер на node.js",
+  "main": "client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.4.0"
+  }
+}
