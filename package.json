@@ -12,18 +12,11 @@
   "license": "ISC",
   "dependencies": {
     "adm-zip": "^0.5.9",
-    "date": "^1.0.2",
     "express": "^4.17.2",
-    "extract-zip": "^2.0.1",
     "fecha": "^4.2.1",
-    "gulp": "^3.9.1",
-    "machinepack-zip": "^1.1.0",
     "pg": "^8.7.1",
-    "unzip": "^0.1.11",
     "uuid": "^8.3.2",
-    "ws": "^8.4.0"
-  },
-  "optionalDependencies": {
-    "utf-8-validate": "^5.0.8"
+    "ws": "^8.4.0",
+	"utf-8-validate": "^5.0.8"
   }
 }
