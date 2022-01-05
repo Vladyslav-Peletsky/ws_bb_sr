@@ -124,6 +124,7 @@ function getSceneFile(sceneid) { // creating archives
                   copy.documentRecognitionStatusCode = 'RecognizedOk';
                   copy.metaData.notRecognizePhotosCounter = 0;
                   copy.report.reportDate = format(Date.now(), 'isoDateTime');
+                  copy.sceneID = sceneid;
 
                   zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
                  
