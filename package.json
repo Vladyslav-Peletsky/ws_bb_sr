@@ -2,7 +2,8 @@
   "name": "ws_bb_sr",
   "version": "1.0.0",
   "description": "websocket-сервер на node.js",
-  "main": "client.js",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -10,6 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.17.2",
+    "pg": "^8.7.1",
+    "uuid": "^8.3.2",
     "ws": "^8.4.0"
   }
 }
