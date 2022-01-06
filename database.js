@@ -31,18 +31,21 @@ function deleteSession(uuid) {
 function newScene(uuid, sceneID) {
   pool.query('INSERT INTO dbo.Scenes (SceneID, Processed, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1;',[uuid,sceneID], (err, res) => {
       if (err) throw err;
+      console.log('newScene:' + sceneID);
     });
 }
 
 function finishNewScene(uuid, sceneID) {
   pool.query('UPDATE dbo.Scenes SET Processed = 2 WHERE SceneID = $1;',[sceneID], (err, res) => {
       if (err) throw err;
+      console.log('finishNewScene:' + sceneID);
     });
 }
 
 function deleteScene(uuid, sceneID) {
   pool.query('UPDATE dbo.Scenes SET isActive = 0 WHERE SceneID = $1;',[sceneID], (err, res) => {
       if (err) throw err;
+      console.log('deleteScene:' + sceneID);
     });
 }
 
@@ -50,6 +53,7 @@ function sceneStatuses(uuid) {
   return new Promise(resolve => {
     pool.query("SELECT s.SceneID as sceneID, s.Processed as processed FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1;",[uuid], (err, res) => {
       if (err) throw err;
+      console.log('sceneStatuses _ uuid :' + uuid);
       let sceneStatuses = {"type":"sceneStatuses"};
       sceneStatuses.data = res.rows;
       resolve(JSON.stringify(sceneStatuses).replace('sceneid', 'sceneID'));
