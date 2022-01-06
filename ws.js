@@ -1,10 +1,10 @@
 import {WebSocketServer}  from 'ws';
 import {newSession, updateSession, deleteSession, newScene, finishNewScene, deleteScene, sceneStatuses} from './database.js';
 import { v4 as uuidv4 } from 'uuid';
-import isValidUTF8 from 'utf-8-validate';
 import AdmZip  from 'adm-zip';
 import * as fs from 'fs';
 import { format } from 'fecha';
+import isUtf8 from 'is-utf8';
 
 
 const PORT = process.env.PORT || 5000;
@@ -24,7 +24,7 @@ function onConnect(wsClient) {
     });
 
     wsClient.on('message', function(message) {
-        if (isValidUTF8(message)) {
+        if (isUtf8(message)) {
                 try {
                 const jsonMessage = JSON.parse(message);
                 switch (jsonMessage.type) {
