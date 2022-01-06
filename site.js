@@ -1,7 +1,7 @@
 import * as http from 'http';
 import * as fs from 'fs';
 
-const PORT=process.env.PORT; 
+const PORT=8080; 
 
     fs.readFile('./www/index.html', function (err, html) {
 
