@@ -90,16 +90,55 @@ function onConnect(wsClient) {
             console.log(global.currentSceneId);
             let scenePath = './scenes/'+global.currentSceneId+'.rec'
             let sceneFolder = './scenes/'+global.currentSceneId
-            fs.writeFile(scenePath, message, function (err) {
+            
+            async function createSceneFile() {
+                return	new Promise((resolve, reject) => {
+                    fs.writeFile(scenePath, message, function (err) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve('createSceneFile: '+global.currentSceneId);
+                        }
+                      });
+                    });
+              }
+            async function unzipSceneFile() {
+                return	new Promise((resolve, reject) => {
+                    var zip = new AdmZip(scenePath);
+                    zip.extractEntryTo(
+                            "scene.json", 
+                            sceneFolder, 
+                            /*maintainEntryPath*/ false, 
+                            /*overwrite*/ true);
+                    resolve('unzipSceneFile: '+global.currentSceneId);
+                        });
+              }
+            async function deleteSceneFile() {
+                return	new Promise((resolve, reject) => {
+                    fs.unlink(scenePath, function (err) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve('deleteSceneFile: '+global.currentSceneId);
+                        }
+                      }); //удаление полученной сцены
+                });
+              }
+
+            createSceneFile().then(function(result) {console.log(result)})
+            .then(unzipSceneFile).then(function(result) {console.log(result)})
+            .then(deleteSceneFile).then(function(result) {console.log(result)})
+
+            /*fs.writeFile(scenePath, message, function (err) {
                 if (err) return console.log(err);
                 var zip = new AdmZip(scenePath);
                 zip.extractEntryTo(
                         "scene.json", 
                         sceneFolder, 
-                        /*maintainEntryPath*/ false, 
-                        /*overwrite*/ true);
+                        false, 
+                        true);
                 fs.unlinkSync(scenePath); //удаление полученной сцены
-              });
+              });*/
         }
     });
 }
