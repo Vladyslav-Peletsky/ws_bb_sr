@@ -29,25 +29,25 @@ function onConnect(wsClient) {
                 const jsonMessage = JSON.parse(message);
                 switch (jsonMessage.type) {
                     case 'connection':
-                        updateSession (clientId, jsonMessage);
-                        sceneStatuses(clientId).then(function(result) {
+                        updateSession(clientId, jsonMessage)
+                        .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
-                        });
+                            });
                         console.log('connection');
                         break;
                     case 'scene':
-                    global.currentSceneId = jsonMessage.data.sceneID;
-                    newScene (clientId, jsonMessage.data.sceneID);
-                    sceneStatuses(clientId).then(function(result) {
+                        global.currentSceneId = jsonMessage.data.sceneID;
+                        newScene(clientId, jsonMessage.data.sceneID)
+                        .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
-                        });
+                            });
                         console.log('newScene');
                         break;
                     case 'finish':
-                        finishNewScene (clientId, jsonMessage.data.sceneID);
-                        sceneStatuses(clientId).then(function(result) {
+                        finishNewScene(clientId, jsonMessage.data.sceneID)
+                        .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
-                        });
+                            });    
                         console.log('finishNewScene');
                         break;
                     case 'get':
@@ -64,17 +64,16 @@ function onConnect(wsClient) {
 
                         break;
                     case 'status':
-                        sceneStatuses(clientId);
                         sceneStatuses(clientId).then(function(result) {
                             wsClient.send(result);
                         });
                         console.log('status');
                         break;
                     case 'delete':
-                        deleteScene (clientId, jsonMessage.data.sceneID);
-                        sceneStatuses(clientId).then(function(result) {
+                        deleteScene(clientId, jsonMessage.data.sceneID)
+                        .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
-                        });
+                            });
                         console.log('delete');
                         break;
                     default:
