@@ -91,6 +91,10 @@ function onConnect(wsClient) {
             let scenePath = './scenes/'+global.currentSceneId+'.rec'
             let sceneFolder = './scenes/'+global.currentSceneId
             
+            if (!fs.existsSync('./scenes')){
+                fs.mkdirSync('./scenes');
+              }
+
             async function createSceneFile() {
                 return	new Promise((resolve, reject) => {
                     fs.writeFile(scenePath, message, function (err) {
