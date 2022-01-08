@@ -89,11 +89,11 @@ function onConnect(wsClient) {
             var dv = new DataView(buf);
             console.log(dv);
             console.log(global.currentSceneId);
-            let scenePath = __dirname+'/scenes/'+global.currentSceneId+'.rec'
-            let sceneFolder = __dirname+'/scenes/'+global.currentSceneId
+            let scenePath = process.cwd()+'/scenes/'+global.currentSceneId+'.rec'
+            let sceneFolder = process.cwd()+'/scenes/'+global.currentSceneId
             
-            if (!fs.existsSync(__dirname+'/scenes')){
-                fs.mkdirSync(__dirname+'/scenes');
+            if (!fs.existsSync(process.cwd()+'/scenes')){
+                fs.mkdirSync(process.cwd()+'/scenes');
               }
 
             async function createSceneFile() {
