@@ -84,9 +84,10 @@ function onConnect(wsClient) {
                 console.log('Ошибка', error);
             }
         } else {
-           /* var buf = new Uint8Array(message).buffer;
+            var buf = new Uint8Array(message).buffer;
+            console.log(buf);
             var dv = new DataView(buf);
-            console.log(dv);*/
+            console.log(dv);
             console.log(global.currentSceneId);
             let scenePath = './scenes/'+global.currentSceneId+'.rec'
             let sceneFolder = './scenes/'+global.currentSceneId
