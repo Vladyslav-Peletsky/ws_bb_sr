@@ -130,8 +130,8 @@ function onConnect(wsClient) {
               }
 
             createSceneFile().then(function(result) {console.log(result)})
-            .then(unzipSceneFile).then(function(result) {console.log(result)})
-            .then(deleteSceneFile).then(function(result) {console.log(result)})
+            //.then(unzipSceneFile).then(function(result) {console.log(result)})
+            //.then(deleteSceneFile).then(function(result) {console.log(result)})
 
             /*fs.writeFile(scenePath, message, function (err) {
                 if (err) return console.log(err);
