@@ -99,13 +99,9 @@ function onConnect(wsClient) {
             async function createSceneFile() {
                 console.log(message);
                 return	new Promise((resolve, reject) => {
-                    fs.writeFile(scenePath, message, function (err) {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve('createSceneFile: '+global.currentSceneId);
-                        }
-                      });
+                    fs.writeFileSync(scenePath, message)
+                        resolve('createSceneFile: '+global.currentSceneId);
+                      
                     });
               }
             async function unzipSceneFile() {
