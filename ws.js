@@ -5,8 +5,9 @@ import AdmZip  from 'adm-zip';
 import * as fs from 'fs';
 import { format } from 'fecha';
 import isUtf8 from 'is-utf8';
+import {Dropbox} from 'dropbox';
 
-
+const dbx = new Dropbox({ accessToken: 'UBNQUrHOyZYAAAAAAAAAAQMjPqYyvzgLwFIPae3ftidUPFDyAKBNU0q9Y_sqGsmF' });
 const PORT = process.env.PORT || 5000;
 const wsServer = new WebSocketServer({ port: PORT });
 global.currentSceneId;
@@ -106,12 +107,25 @@ function onConnect(wsClient) {
               }
             async function unzipSceneFile() {
                 return	new Promise((resolve, reject) => {
-                    var zip = new AdmZip(scenePath);
-                    zip.extractEntryTo(
+                    var zip = new AdmZip(message);
+                    zip.getEntries().forEach(function(entry) {
+                        console.log(entry);
+                        if (entry.entryName == "scene.json") {
+                            let contents = entry.getData();
+                            dbx.filesUpload({ path: '/'+global.currentSceneId+'/scene.json', contents })
+                            .then((response) => {
+                                console.log(response);
+                                })
+                            .catch((uploadErr) => {
+                                console.log(uploadErr);
+                            });
+                        }
+                    });
+                    /*zip.extractEntryTo(
                             "scene.json", 
                             sceneFolder, 
-                            /*maintainEntryPath*/ false, 
-                            /*overwrite*/ true);
+                            false, 
+                            true);*/
                     resolve('unzipSceneFile: '+global.currentSceneId);
                         });
               }
@@ -127,8 +141,9 @@ function onConnect(wsClient) {
                 });
               }
 
-            createSceneFile().then(function(result) {console.log(result)})
-            //.then(unzipSceneFile).then(function(result) {console.log(result)})
+           // createSceneFile().then(function(result) {console.log(result)})
+           unzipSceneFile().then(function(result) {console.log(result)})
+           //.then(unzipSceneFile).then(function(result) {console.log(result)})
             //.then(deleteSceneFile).then(function(result) {console.log(result)})
 
             /*fs.writeFile(scenePath, message, function (err) {
