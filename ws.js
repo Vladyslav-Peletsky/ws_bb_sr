@@ -86,7 +86,13 @@ function onConnect(wsClient) {
                         createSceneFile().then(function(result) {console.log(result)})
                         .then(unzipSceneFile).then(function(result) {console.log(result)})
                         .then(deleteSceneFile).then(function(result) {console.log(result)})
-                    
+                        
+                        global.result = null;
+                        global.currentSceneId = null;
+                        console.log('clear global');
+                        console.log(global.result);
+                        console.log(global.currentSceneId);
+                            
                         finishNewScene(clientId, jsonMessage.data.sceneID)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
@@ -132,14 +138,8 @@ function onConnect(wsClient) {
             }
         } else {
             var buf = new Uint8Array(message);
-            console.log('start send file');
+            console.log('start send file - '+ global.currentSceneId);
             global.result = Buffer.concat([global.result,buf]);
-            console.log(global.result);
-            console.log(global.currentSceneId);
-            
-            
-            
-            
         }
     });
 }
