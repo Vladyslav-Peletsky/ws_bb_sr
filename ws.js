@@ -5,13 +5,12 @@ import AdmZip  from 'adm-zip';
 import * as fs from 'fs';
 import { format } from 'fecha';
 import isUtf8 from 'is-utf8';
-import {Dropbox} from 'dropbox';
 
-const dbx = new Dropbox({ accessToken: 'UBNQUrHOyZYAAAAAAAAAAQMjPqYyvzgLwFIPae3ftidUPFDyAKBNU0q9Y_sqGsmF' });
+
 const PORT = process.env.PORT || 5000;
 const wsServer = new WebSocketServer({ port: PORT });
 global.currentSceneId;
-
+global.result = new Uint8Array();
 
 wsServer.on('connection', onConnect);
 function onConnect(wsClient) {
@@ -45,10 +44,57 @@ function onConnect(wsClient) {
                         console.log('newScene');
                         break;
                     case 'finish':
+                    if (global.currentSceneId = jsonMessage.data.sceneID) {  
+                        let scenePath = process.cwd()+'/scenes/'+global.currentSceneId+'.rec'
+                            let sceneFolder = process.cwd()+'/scenes/'+global.currentSceneId
+                            
+                            if (!fs.existsSync(process.cwd()+'/scenes')){
+                                fs.mkdirSync(process.cwd()+'/scenes');
+                            }
+
+                            async function createSceneFile() {
+                                console.log(global.result);
+                                return	new Promise((resolve, reject) => {
+                                    fs.writeFileSync(scenePath, global.result)
+                                        resolve('createSceneFile: '+global.currentSceneId);
+                                    
+                                    });
+                            }
+                            async function unzipSceneFile() {
+                                return	new Promise((resolve, reject) => {
+                                    var zip = new AdmZip(scenePath);
+                                    zip.extractEntryTo(
+                                            "scene.json", 
+                                            sceneFolder, 
+                                            /*maintainEntryPath*/ false, 
+                                            /*overwrite*/ true);
+                                    resolve('unzipSceneFile: '+global.currentSceneId);
+                                        });
+                            }
+                            async function deleteSceneFile() {
+                                return	new Promise((resolve, reject) => {
+                                    fs.unlink(scenePath, function (err) {
+                                        if (err) {
+                                            reject(err);
+                                        } else {
+                                            resolve('deleteSceneFile: '+global.currentSceneId);
+                                        }
+                                    }); //удаление полученной сцены
+                                });
+                            }
+
+                        createSceneFile().then(function(result) {console.log(result)})
+                        .then(unzipSceneFile).then(function(result) {console.log(result)})
+                        .then(deleteSceneFile).then(function(result) {console.log(result)})
+                    
                         finishNewScene(clientId, jsonMessage.data.sceneID)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
                             });    
+                        } else
+                        {
+                            console.log('finish - ид сцен не совпали')
+                        }
                         console.log('finishNewScene');
                         break;
                     case 'get':
@@ -85,77 +131,15 @@ function onConnect(wsClient) {
                 console.log('Ошибка', error);
             }
         } else {
-            var buf = new Uint8Array(message).buffer;
-            console.log(buf);
-            var dv = new DataView(buf);
-            console.log(dv);
+            var buf = new Uint8Array(message);
+            console.log('start send file');
+            global.result = Buffer.concat([global.result,buf]);
+            console.log(global.result);
             console.log(global.currentSceneId);
-            let scenePath = process.cwd()+'/scenes/'+global.currentSceneId+'.rec'
-            let sceneFolder = process.cwd()+'/scenes/'+global.currentSceneId
             
-            if (!fs.existsSync(process.cwd()+'/scenes')){
-                fs.mkdirSync(process.cwd()+'/scenes');
-              }
-
-            async function createSceneFile() {
-                console.log(message);
-                return	new Promise((resolve, reject) => {
-                    fs.writeFileSync(scenePath, message)
-                        resolve('createSceneFile: '+global.currentSceneId);
-                      
-                    });
-              }
-            async function unzipSceneFile() {
-                return	new Promise((resolve, reject) => {
-                    var zip = new AdmZip(message);
-                    zip.getEntries().forEach(function(entry) {
-                        console.log(entry);
-                        if (entry.entryName == "scene.json") {
-                            let contents = entry.getData();
-                            dbx.filesUpload({ path: '/'+global.currentSceneId+'/scene.json', contents })
-                            .then((response) => {
-                                console.log(response);
-                                })
-                            .catch((uploadErr) => {
-                                console.log(uploadErr);
-                            });
-                        }
-                    });
-                    /*zip.extractEntryTo(
-                            "scene.json", 
-                            sceneFolder, 
-                            false, 
-                            true);*/
-                    resolve('unzipSceneFile: '+global.currentSceneId);
-                        });
-              }
-            async function deleteSceneFile() {
-                return	new Promise((resolve, reject) => {
-                    fs.unlink(scenePath, function (err) {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve('deleteSceneFile: '+global.currentSceneId);
-                        }
-                      }); //удаление полученной сцены
-                });
-              }
-
-           // createSceneFile().then(function(result) {console.log(result)})
-           unzipSceneFile().then(function(result) {console.log(result)})
-           //.then(unzipSceneFile).then(function(result) {console.log(result)})
-            //.then(deleteSceneFile).then(function(result) {console.log(result)})
-
-            /*fs.writeFile(scenePath, message, function (err) {
-                if (err) return console.log(err);
-                var zip = new AdmZip(scenePath);
-                zip.extractEntryTo(
-                        "scene.json", 
-                        sceneFolder, 
-                        false, 
-                        true);
-                fs.unlinkSync(scenePath); //удаление полученной сцены
-              });*/
+            
+            
+            
         }
     });
 }
