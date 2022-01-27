@@ -46,7 +46,7 @@ function onConnect(wsClient) {
                     case 'finish':
                     if (global.currentSceneId = jsonMessage.data.sceneID) {  
                             let scenePath = process.cwd()+'/scenes/'+global.currentSceneId+'.rec'
-                            let sceneFolder = process.cwd()+'/scenes/'+global.currentSceneId
+                            let sceneFolder = process.cwd()+'/scenes/'
                             
                             if (!fs.existsSync(process.cwd()+'/scenes')){
                                 fs.mkdirSync(process.cwd()+'/scenes');
@@ -68,6 +68,9 @@ function onConnect(wsClient) {
                                             sceneFolder, 
                                             /*maintainEntryPath*/ false, 
                                             /*overwrite*/ true);
+                                    fs.rename(sceneFolder+'scene.json', sceneFolder+global.currentSceneId+'.json', () => {
+                                        console.log("\nFile Renamed!\n");
+                                      });
                                     resolve('unzipSceneFile: '+global.currentSceneId);
                                         });
                             }
@@ -130,7 +133,7 @@ function onConnect(wsClient) {
                         console.log('get');
                         getSceneFile(jsonMessage.data.sceneID);
                        
-                        let resultSceneFilePath = './scenes/'+jsonMessage.data.sceneID+'/result/'+jsonMessage.data.sceneID+'.rec';
+                        let resultSceneFilePath = './scenes/result/'+jsonMessage.data.sceneID+'.rec';
 
                         var resultRec = fs.readFileSync(resultSceneFilePath);
                         for (var i = 0; i < resultRec.length; ++i) {
@@ -170,9 +173,9 @@ function onConnect(wsClient) {
 function getSceneFile(sceneid) { // creating archives
                   var zip = new AdmZip();
                   // add file directly
-                  let sceneFilePath = './scenes/'+sceneid+'/scene.json';
-                  let resultSceneFilePath = './scenes/'+sceneid+'/result/'+sceneid+'.rec';
-                  let dirResult = './scenes/'+sceneid+'/result';
+                  let sceneFilePath = './scenes/'+sceneid+'.json';
+                  let resultSceneFilePath = './scenes/result/'+sceneid+'.rec';
+                  let dirResult = './scenes/result';
                   
                   if (!fs.existsSync(dirResult)){
                     fs.mkdirSync(dirResult);
