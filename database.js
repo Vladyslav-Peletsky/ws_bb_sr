@@ -60,6 +60,17 @@ function finishNewScene(uuid, sceneID) {
     });
 }
 
+function sceneRecognized(uuid, sceneID) {
+  return	new Promise((resolve, reject) => {  
+      pool.query('UPDATE dbo.Scenes SET Processed = 3 WHERE SceneID = $1;',[sceneID], (err, res) => {
+          if (err) throw err;
+          console.log('sceneRecognized:' + sceneID);
+          console.log(res.rows);
+          resolve(JSON.stringify(res.rows));
+      });
+    });
+}
+
 function deleteScene(uuid, sceneID) {
   return	new Promise((resolve, reject) => {  
       pool.query('UPDATE dbo.Scenes SET isActive = 0 WHERE SceneID = $1;',[sceneID], (err, res) => {
@@ -84,4 +95,4 @@ function sceneStatuses(uuid) {
   });
 }
 
-export {newSession, updateSession, deleteSession, newScene, finishNewScene, deleteScene, sceneStatuses};
+export {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, deleteScene, sceneStatuses};

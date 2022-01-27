@@ -1,5 +1,5 @@
 import {WebSocketServer}  from 'ws';
-import {newSession, updateSession, deleteSession, newScene, finishNewScene, deleteScene, sceneStatuses} from './database.js';
+import {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, deleteScene, sceneStatuses} from './database.js';
 import { v4 as uuidv4 } from 'uuid';
 import AdmZip  from 'adm-zip';
 import * as fs from 'fs';
@@ -45,13 +45,13 @@ function onConnect(wsClient) {
                         break;
                     case 'finish':
                     if (global.currentSceneId = jsonMessage.data.sceneID) {  
-                        let scenePath = process.cwd()+'/scenes/'+global.currentSceneId+'.rec'
+                            let scenePath = process.cwd()+'/scenes/'+global.currentSceneId+'.rec'
                             let sceneFolder = process.cwd()+'/scenes/'+global.currentSceneId
                             
                             if (!fs.existsSync(process.cwd()+'/scenes')){
                                 fs.mkdirSync(process.cwd()+'/scenes');
                             }
-
+                            
                             async function createSceneFile() {
                                 console.log(global.result);
                                 return	new Promise((resolve, reject) => {
@@ -87,7 +87,7 @@ function onConnect(wsClient) {
                         .then(unzipSceneFile).then(function(result) {console.log(result)})
                         .then(deleteSceneFile).then(function(result) {console.log(result)})
                         
-                        global.result = null;
+                        global.result = new Uint8Array();
                         global.currentSceneId = null;
                         console.log('clear global');
                         console.log(global.result);
@@ -97,6 +97,22 @@ function onConnect(wsClient) {
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
                             });    
+                        
+                        //таймаут
+                        async function sleep() {
+                            return	new Promise((resolve, reject) => {
+                                setTimeout(() => {
+                                    resolve('Inside test await');
+                                }, 10000);
+                            });
+                        }
+                        
+                        sleep()
+                        .then(() => sceneRecognized(clientId, jsonMessage.data.sceneID))
+                        .then(() => sceneStatuses(clientId)).then(function(result) {
+                            wsClient.send(result);
+                            }); 
+                        
                         } else
                         {
                             console.log('finish - ид сцен не совпали')
