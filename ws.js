@@ -83,15 +83,22 @@ function onConnect(wsClient) {
                                 });
                             }
 
+                            async function clearGlobalVariables() {
+                                return	new Promise((resolve, reject) => {
+                                    global.result = new Uint8Array();
+                                    global.currentSceneId = null;
+                                    console.log('clear global');
+                                    console.log(global.result);
+                                    console.log(global.currentSceneId);
+                                    resolve('clearGlobalVariables - done');
+                                });
+                            }
+
                         createSceneFile().then(function(result) {console.log(result)})
                         .then(unzipSceneFile).then(function(result) {console.log(result)})
                         .then(deleteSceneFile).then(function(result) {console.log(result)})
-                        
-                        global.result = new Uint8Array();
-                        global.currentSceneId = null;
-                        console.log('clear global');
-                        console.log(global.result);
-                        console.log(global.currentSceneId);
+                        .then(clearGlobalVariables).then(function(result) {console.log(result)})
+       
                             
                         finishNewScene(clientId, jsonMessage.data.sceneID)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
