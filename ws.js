@@ -132,15 +132,17 @@ function onConnect(wsClient) {
                     case 'get':
                         console.log('get');
                         getSceneFile(jsonMessage.data.sceneID);
-                       
                         let resultSceneFilePath = './scenes/result/'+jsonMessage.data.sceneID+'.rec';
-
-                        var resultRec = fs.readFileSync(resultSceneFilePath);
-                        console.log(resultRec);
-                        for (var i = 0; i < resultRec.length; ++i) {
-                            resultRec[i] = i / 10;
-                        }
-                        wsClient.send(resultRec);
+                        fs.createReadStream(resultSceneFilePath, {bufferSize: 100 * 1024})
+                        .on("data", function(chunk){ 
+                                    wsClient.send(chunk);
+                                    console.log(chunk);
+                                })
+                        .on('end', function () {
+                                    wsClient.send('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'","checksum":"2A5B763AD25E59F5C020D167E00AA917"}}');
+                                    console.log('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'","checksum":"2A5B763AD25E59F5C020D167E00AA917"}}');
+                                });
+                        
 
                         break;
                     case 'status':
