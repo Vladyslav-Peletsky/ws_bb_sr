@@ -136,8 +136,9 @@ function onConnect(wsClient) {
                         let resultSceneFilePath = './scenes/result/'+jsonMessage.data.sceneID+'.rec';
 
                         var resultRec = fs.readFileSync(resultSceneFilePath);
+                        console.log(resultRec);
                         for (var i = 0; i < resultRec.length; ++i) {
-                            resultRec[i] = i / 2;
+                            resultRec[i] = i / 10;
                         }
                         wsClient.send(resultRec);
 
