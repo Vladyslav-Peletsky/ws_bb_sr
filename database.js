@@ -102,8 +102,8 @@ function sceneStatuses(uuid) {
         console.log('sceneStatuses _ uuid :' + uuid);
         let sceneStatuses = {"type":"sceneStatuses"};
         sceneStatuses.data = res.rows;
-        console.log('sceneStatuses - ' + JSON.stringify(sceneStatuses).replaceAll('sceneid', 'sceneID'));
-        resolve(JSON.stringify(sceneStatuses).replaceAll('sceneid', 'sceneID'));
+        console.log('sceneStatuses - ' + JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID'));
+        resolve(JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID'));
     });
     
   });
