@@ -78,8 +78,8 @@ function finishSendScene(sceneID) {
           console.log('finishSendScene _ uuid :' + sceneID);
           let finish = {"type":"finish"};
           finish.data = res.rows;
-          console.log('finish - ' + JSON.stringify(finish).replaceAll('sceneid', 'sceneID'));
-          resolve(JSON.stringify(finish).replaceAll('sceneid', 'sceneID'));
+          console.log('finish - ' + JSON.stringify(finish).replace(/sceneid/g, 'sceneID'));
+          resolve(JSON.stringify(finish).replace(/sceneid/g, 'sceneID'));
       });
     });
 }

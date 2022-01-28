@@ -98,28 +98,25 @@ function onConnect(wsClient) {
                                     resolve('clearGlobalVariables - done');
                                 });
                             }
+                            
+                            //таймаут
+                            async function sleep() {
+                                return	new Promise((resolve, reject) => {
+                                    setTimeout(() => {
+                                        resolve('Inside test await');
+                                    }, 10000);
+                                });
+                            }
 
                         createSceneFile().then(function(result) {console.log(result)})
                         .then(unzipSceneFile).then(function(result) {console.log(result)})
                         .then(deleteSceneFile).then(function(result) {console.log(result)})
                         .then(clearGlobalVariables).then(function(result) {console.log(result)})
-       
-                        finishNewScene(clientId, jsonMessage.data.sceneID, jsonMessage.data.checksum)
-                        .then(() => sceneStatuses(clientId)).then(function(result) {
-                            wsClient.send(result);
-                            });    
-                        
-                        //таймаут
-                        async function sleep() {
-                            return	new Promise((resolve, reject) => {
-                                setTimeout(() => {
-                                    resolve('Inside test await');
-                                }, 10000);
-                            });
-                        }
-                        
-                        sleep()
-                        .then(() => getSceneFile(jsonMessage.data.sceneID))
+                        .then(() => finishNewScene(clientId, jsonMessage.data.sceneID, jsonMessage.data.checksum).then(function(result) { console.log(result)}))
+                        .then(() => sceneStatuses(clientId)).then(function(result) {wsClient.send(result)})    
+                        .then(sleep).then(function(result) {console.log(result)})
+                        .then(() => getSceneFile(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
+                        .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
                             }); 
@@ -178,6 +175,7 @@ function onConnect(wsClient) {
  
 async function getSceneFile(sceneid) { // creating archives
     return	new Promise((resolve, reject) => {
+                  console.log('recognizedStep_0');
                   var zip = new AdmZip();
                   // add file directly
                   let sceneFilePath = './scenes/'+sceneid+'.json';
@@ -203,17 +201,23 @@ async function getSceneFile(sceneid) { // creating archives
                   zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file
                                   
                   zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
-            
-            fs.readFile(resultSceneFilePath, function(err, buf) {
-                let md5hash = md5(buf);
-                let length = fs.statSync(resultSceneFilePath);
-                sceneRecognized(sceneid, length.size, md5hash.toUpperCase())
-                resolve('createResulScene: '+sceneid);
-            }); 
-            });
-            
+                  console.log('recognizedStep_1');
 
-               
+            resolve('createResulScene: '+sceneid);
+            });          
+    }
+
+    async function sceneRecognizedUpdateStatus(sceneid) { // creating archives
+        return	new Promise((resolve, reject) => {
+            let resultSceneFilePath = './scenes/result/'+sceneid+'.rec';
+            let buf = fs.readFileSync(resultSceneFilePath)
+            let md5hash = md5(buf);
+            let length = fs.statSync(resultSceneFilePath);
+            sceneRecognized(sceneid, length.size, md5hash.toUpperCase())
+            console.log('recognizedStep_2');
+            
+        resolve('sceneRecognizedUpdateStatus: '+sceneid);
+        });   
     }
 
 console.log('Сервер запущен на 9000 порту');
