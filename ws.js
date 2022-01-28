@@ -5,6 +5,8 @@ import AdmZip  from 'adm-zip';
 import * as fs from 'fs';
 import { format } from 'fecha';
 import isUtf8 from 'is-utf8';
+import md5 from 'md5';
+
 
 
 const PORT = process.env.PORT || 5000;
@@ -37,7 +39,7 @@ function onConnect(wsClient) {
                         break;
                     case 'scene':
                         global.currentSceneId = jsonMessage.data.sceneID;
-                        newScene(clientId, jsonMessage.data.sceneID)
+                        newScene(clientId, jsonMessage.data.sceneID, jsonMessage.data.length)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
                             });
@@ -102,8 +104,7 @@ function onConnect(wsClient) {
                         .then(deleteSceneFile).then(function(result) {console.log(result)})
                         .then(clearGlobalVariables).then(function(result) {console.log(result)})
        
-                            
-                        finishNewScene(clientId, jsonMessage.data.sceneID)
+                        finishNewScene(clientId, jsonMessage.data.sceneID, jsonMessage.data.checksum)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
                             });    
@@ -118,7 +119,8 @@ function onConnect(wsClient) {
                         }
                         
                         sleep()
-                        .then(() => sceneRecognized(clientId, jsonMessage.data.sceneID))
+                        .then(() => getSceneFile(jsonMessage.data.sceneID))
+                        //.then(() => sceneRecognized(clientId, jsonMessage.data.sceneID))
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
                             }); 
@@ -131,7 +133,7 @@ function onConnect(wsClient) {
                         break;
                     case 'get':
                         console.log('get');
-                        getSceneFile(jsonMessage.data.sceneID);
+                        
                         let resultSceneFilePath = './scenes/result/'+jsonMessage.data.sceneID+'.rec';
                         fs.createReadStream(resultSceneFilePath, {bufferSize: 100 * 1024})
                         .on("data", function(chunk){ 
@@ -139,7 +141,11 @@ function onConnect(wsClient) {
                                     console.log(chunk);
                                 })
                         .on('end', function () {
-                                    wsClient.send('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'","checksum":"2A5B763AD25E59F5C020D167E00AA917"}}');
+                                fs.readFile(resultSceneFilePath, function(err, buf) {
+                                    let md5hash = md5(buf);
+                                    wsClient.send('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'","checksum":"'+md5hash.toUpperCase()+'"}}');
+                                }); 
+                                    
                                     console.log('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'","checksum":"2A5B763AD25E59F5C020D167E00AA917"}}');
                                 });
                         
@@ -173,7 +179,8 @@ function onConnect(wsClient) {
     });
 }
  
-function getSceneFile(sceneid) { // creating archives
+async function getSceneFile(sceneid) { // creating archives
+    return	new Promise((resolve, reject) => {
                   var zip = new AdmZip();
                   // add file directly
                   let sceneFilePath = './scenes/'+sceneid+'.json';
@@ -199,8 +206,18 @@ function getSceneFile(sceneid) { // creating archives
                   zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file
                                   
                   zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
-                  
-                }
+            
+            fs.readFile(resultSceneFilePath, function(err, buf) {
+                let md5hash = md5(buf);
+                let length = fs.statSync(resultSceneFilePath);
+                sceneRecognized(sceneid, length.size, md5hash.toUpperCase())
+                resolve('createResulScene: '+sceneid);
+            }); 
+            });
+            
+
+               
+    }
 
 console.log('Сервер запущен на 9000 порту');
 

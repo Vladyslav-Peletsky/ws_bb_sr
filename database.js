@@ -38,9 +38,9 @@ function deleteSession(uuid) {
     });
 }
 
-function newScene(uuid, sceneID) {
+function newScene(uuid, sceneID, length) {
   return	new Promise((resolve, reject) => {
-      pool.query('INSERT INTO dbo.Scenes (SceneID, Processed, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1;',[uuid,sceneID], (err, res) => {
+      pool.query('INSERT INTO dbo.Scenes (SceneID, Processed, Length, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, $3,  1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1;',[uuid,sceneID,length], (err, res) => {
           if (err) throw err;
           console.log('newScene:' + sceneID);
           console.log(res.rows);
@@ -49,9 +49,9 @@ function newScene(uuid, sceneID) {
     });
 }
 
-function finishNewScene(uuid, sceneID) {
+function finishNewScene(uuid, sceneID, checksum) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET Processed = 2 WHERE SceneID = $1;',[sceneID], (err, res) => {
+      pool.query('UPDATE dbo.Scenes SET Processed = 2, Checksum = $2 WHERE SceneID = $1;',[sceneID,checksum], (err, res) => {
           if (err) throw err;
           console.log('finishNewScene:' + sceneID);
           console.log(res.rows);
@@ -60,9 +60,9 @@ function finishNewScene(uuid, sceneID) {
     });
 }
 
-function sceneRecognized(uuid, sceneID) {
+function sceneRecognized(sceneID, length, checksum) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET Processed = 3 WHERE SceneID = $1;',[sceneID], (err, res) => {
+      pool.query('UPDATE dbo.Scenes SET Processed = 3, Length = $2, Checksum = $3 WHERE SceneID = $1;',[sceneID, length, checksum], (err, res) => {
           if (err) throw err;
           console.log('sceneRecognized:' + sceneID);
           console.log(res.rows);
@@ -84,7 +84,7 @@ function deleteScene(uuid, sceneID) {
 
 function sceneStatuses(uuid) {
   return new Promise(resolve => {
-    pool.query("SELECT s.SceneID as sceneID, s.Processed as processed, 1607048 as length, 'DF6F67D2CB0C9CDAD337A03D79536988' as checksum FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1;",[uuid], (err, res) => {
+    pool.query("SELECT s.SceneID as sceneID, s.Processed as processed, Length, Checksum FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1;",[uuid], (err, res) => {
         if (err) throw err;
         console.log('sceneStatuses _ uuid :' + uuid);
         let sceneStatuses = {"type":"sceneStatuses"};

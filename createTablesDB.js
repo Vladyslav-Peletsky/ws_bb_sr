@@ -30,7 +30,7 @@ function createTables() {
         console.log('Схема создана');
       });
 
-    pool.query("CREATE TABLE IF NOT EXISTS dbo.Scenes (SceneID uuid NOT NULL, Processed integer NOT NULL, isActive int NOT NULL, DistributorID character(50) NOT NULL, VisitID character(50) NOT NULL, DocumentID character(50) NOT NULL, CustomerID character(50) NOT NULL, EmployeeID character(50) NOT NULL, Custom character(5000) NULL)", (err, res) => {
+    pool.query("CREATE TABLE IF NOT EXISTS dbo.Scenes (SceneID uuid NOT NULL, Processed integer NOT NULL, Length integer NULL, Checksum character(32) NULL, isActive int NOT NULL, DistributorID character(50) NOT NULL, VisitID character(50) NOT NULL, DocumentID character(50) NOT NULL, CustomerID character(50) NOT NULL, EmployeeID character(50) NOT NULL, Custom character(5000) NULL)", (err, res) => {
         if (err) throw err;
         console.log('Таблица сцен создана');
       });
