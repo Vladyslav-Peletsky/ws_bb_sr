@@ -100,11 +100,11 @@ function onConnect(wsClient) {
                             }
                             
                             //таймаут
-                            async function sleep() {
+                            async function sleep(timeout) {
                                 return	new Promise((resolve, reject) => {
                                     setTimeout(() => {
                                         resolve('Inside test await');
-                                    }, 10000);
+                                    }, timeout);
                                 });
                             }
 
@@ -113,13 +113,12 @@ function onConnect(wsClient) {
                         .then(deleteSceneFile).then(function(result) {console.log(result)})
                         .then(clearGlobalVariables).then(function(result) {console.log(result)})
                         .then(() => finishNewScene(clientId, jsonMessage.data.sceneID, jsonMessage.data.checksum).then(function(result) { console.log(result)}))
-                        .then(() => sceneStatuses(clientId)).then(function(result) {wsClient.send(result)})    
-                        .then(sleep).then(function(result) {console.log(result)})
+                        .then(() => sceneStatuses(clientId)).then(function(result) {wsClient.send(result)})
+                        .then(() => sleep(10000)).then(function(result) {console.log(result)})
                         .then(() => getSceneFile(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
                         .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
-                        .then(() => sceneStatuses(clientId)).then(function(result) {
-                            wsClient.send(result);
-                            }); 
+                        .then(() => sleep(2000)).then(function(result) {console.log(result)})
+                        .then(() => sceneStatuses(clientId)).then(function(result) {wsClient.send(result)});
                         
                         } else
                         {
