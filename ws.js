@@ -1,5 +1,5 @@
 import {WebSocketServer}  from 'ws';
-import {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, deleteScene, sceneStatuses} from './database.js';
+import {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, finishSendScene, deleteScene, sceneStatuses} from './database.js';
 import { v4 as uuidv4 } from 'uuid';
 import AdmZip  from 'adm-zip';
 import * as fs from 'fs';
@@ -120,7 +120,6 @@ function onConnect(wsClient) {
                         
                         sleep()
                         .then(() => getSceneFile(jsonMessage.data.sceneID))
-                        //.then(() => sceneRecognized(clientId, jsonMessage.data.sceneID))
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             wsClient.send(result);
                             }); 
@@ -141,12 +140,10 @@ function onConnect(wsClient) {
                                     console.log(chunk);
                                 })
                         .on('end', function () {
-                                fs.readFile(resultSceneFilePath, function(err, buf) {
-                                    let md5hash = md5(buf);
-                                    wsClient.send('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'","checksum":"'+md5hash.toUpperCase()+'"}}');
-                                }); 
-                                    
-                                    console.log('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'","checksum":"2A5B763AD25E59F5C020D167E00AA917"}}');
+                                    finishSendScene(jsonMessage.data.sceneID).then(function(result) {
+                                        wsClient.send(result);
+                                    }); 
+                                    console.log('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'"}}');
                                 });
                         
 

@@ -71,6 +71,19 @@ function sceneRecognized(sceneID, length, checksum) {
     });
 }
 
+function finishSendScene(sceneID) {
+  return	new Promise((resolve, reject) => {  
+      pool.query('SELECT sceneid, checksum FROM dbo.scenes WHERE sceneid = $1',[sceneID], (err, res) => {
+          if (err) throw err;
+          console.log('finishSendScene _ uuid :' + sceneID);
+          let finish = {"type":"finish"};
+          finish.data = res.rows;
+          console.log('finish - ' + JSON.stringify(finish).replaceAll('sceneid', 'sceneID'));
+          resolve(JSON.stringify(finish).replaceAll('sceneid', 'sceneID'));
+      });
+    });
+}
+
 function deleteScene(uuid, sceneID) {
   return	new Promise((resolve, reject) => {  
       pool.query('UPDATE dbo.Scenes SET isActive = 0 WHERE SceneID = $1;',[sceneID], (err, res) => {
@@ -84,16 +97,16 @@ function deleteScene(uuid, sceneID) {
 
 function sceneStatuses(uuid) {
   return new Promise(resolve => {
-    pool.query("SELECT s.SceneID as sceneID, s.Processed as processed, Length, Checksum FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1;",[uuid], (err, res) => {
+    pool.query("SELECT s.SceneID, s.Processed, Length, Checksum FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1;",[uuid], (err, res) => {
         if (err) throw err;
         console.log('sceneStatuses _ uuid :' + uuid);
         let sceneStatuses = {"type":"sceneStatuses"};
         sceneStatuses.data = res.rows;
-        console.log('sceneStatuses - ' + JSON.stringify(sceneStatuses).replace('sceneid', 'sceneID'));
-        resolve(JSON.stringify(sceneStatuses).replace('sceneid', 'sceneID'));
+        console.log('sceneStatuses - ' + JSON.stringify(sceneStatuses).replaceAll('sceneid', 'sceneID'));
+        resolve(JSON.stringify(sceneStatuses).replaceAll('sceneid', 'sceneID'));
     });
     
   });
 }
 
-export {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, deleteScene, sceneStatuses};
+export {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, finishSendScene, deleteScene, sceneStatuses};
