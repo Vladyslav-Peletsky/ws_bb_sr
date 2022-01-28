@@ -99,14 +99,7 @@ function onConnect(wsClient) {
                                 });
                             }
                             
-                            //таймаут
-                            async function sleep(timeout) {
-                                return	new Promise((resolve, reject) => {
-                                    setTimeout(() => {
-                                        resolve('Inside test await');
-                                    }, timeout);
-                                });
-                            }
+                           
 
                         createSceneFile().then(function(result) {console.log(result)})
                         .then(unzipSceneFile).then(function(result) {console.log(result)})
@@ -136,10 +129,11 @@ function onConnect(wsClient) {
                                     console.log(chunk);
                                 })
                         .on('end', function () {
-                                    finishSendScene(jsonMessage.data.sceneID).then(function(result) {
+                            sleep(1000)  
+                            .then(() => finishSendScene(jsonMessage.data.sceneID)).then(function(result) {
                                         wsClient.send(result);
                                     }); 
-                                    console.log('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'"}}');
+                                console.log('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'"}}');
                                 });
                         
 
@@ -217,6 +211,15 @@ async function getSceneFile(sceneid) { // creating archives
             
         resolve('sceneRecognizedUpdateStatus: '+sceneid);
         });   
+    }
+
+     //таймаут
+     async function sleep(timeout) {
+        return	new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve('Inside test await');
+            }, timeout);
+        });
     }
 
 console.log('Сервер запущен на 9000 порту');
