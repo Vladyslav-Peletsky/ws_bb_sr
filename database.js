@@ -76,8 +76,10 @@ function finishSendScene(sceneID) {
       pool.query('SELECT sceneid, checksum FROM dbo.scenes WHERE sceneid = $1',[sceneID], (err, res) => {
           if (err) throw err;
           console.log('finishSendScene _ uuid :' + sceneID);
-          let finish = {"type":"finish"};
-          finish.data = res.rows;
+          let finish = {"type":"finish", "data":{} };
+          console.log(res.rows[0].sceneid);
+          finish.data.sceneid = res.rows[0].sceneid;
+          finish.data.checksum = res.rows[0].checksum;
           console.log('finish - ' + JSON.stringify(finish).replace(/sceneid/g, 'sceneID'));
           resolve(JSON.stringify(finish).replace(/sceneid/g, 'sceneID'));
       });

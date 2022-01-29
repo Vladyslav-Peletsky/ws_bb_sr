@@ -107,10 +107,10 @@ function onConnect(wsClient) {
                         .then(clearGlobalVariables).then(function(result) {console.log(result)})
                         .then(() => finishNewScene(clientId, jsonMessage.data.sceneID, jsonMessage.data.checksum).then(function(result) { console.log(result)}))
                         .then(() => sceneStatuses(clientId)).then(function(result) {wsClient.send(result)})
-                        .then(() => sleep(10000)).then(function(result) {console.log(result)})
+                        .then(() => sleep(4000)).then(function(result) {console.log(result)})
                         .then(() => getSceneFile(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
                         .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
-                        .then(() => sleep(2000)).then(function(result) {console.log(result)})
+                        .then(() => sleep(1000)).then(function(result) {console.log(result)})
                         .then(() => sceneStatuses(clientId)).then(function(result) {wsClient.send(result)});
                         
                         } else
@@ -123,10 +123,11 @@ function onConnect(wsClient) {
                         console.log('get');
                         
                         let resultSceneFilePath = './scenes/result/'+jsonMessage.data.sceneID+'.rec';
+                        
                         fs.createReadStream(resultSceneFilePath, {bufferSize: 100 * 1024})
                         .on("data", function(chunk){ 
-                                    wsClient.send(chunk);
-                                    console.log(chunk);
+                                wsClient.send(chunk);
+                                console.log(chunk);
                                 })
                         .on('end', function () {
                             sleep(1000)  
