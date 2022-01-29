@@ -261,7 +261,7 @@ server.on('upgrade', function upgrade(request, socket, head) {
   
   server.listen(PORT);
 
-  console.log('Сервер запущен на 9000 порту');
+  console.log('Сервер запущен на порту: '+ PORT);
 
 
 export {onConnect};
