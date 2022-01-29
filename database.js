@@ -99,7 +99,7 @@ function deleteScene(uuid, sceneID) {
 
 function sceneStatuses(uuid) {
   return new Promise(resolve => {
-    pool.query("SELECT s.SceneID, s.Processed, Length, Checksum FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1 AND isActive =1;",[uuid], (err, res) => {
+    pool.query("SELECT s.SceneID, s.Processed, Length, Checksum FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1 AND s.isActive =1;",[uuid], (err, res) => {
         if (err) throw err;
         console.log('sceneStatuses _ uuid :' + uuid);
         let sceneStatuses = {"type":"sceneStatuses"};

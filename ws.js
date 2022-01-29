@@ -1,3 +1,5 @@
+import { createServer } from 'http';
+import { parse } from 'url';
 import {WebSocketServer}  from 'ws';
 import {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, finishSendScene, deleteScene, sceneStatuses} from './database.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,14 +9,17 @@ import { format } from 'fecha';
 import isUtf8 from 'is-utf8';
 import md5 from 'md5';
 
-
-
+const server = createServer();
 const PORT = process.env.PORT || 5000;
-const wsServer = new WebSocketServer({ port: PORT });
+const wsBlackboxRecognition = new WebSocketServer({ noServer: true});
+const site = new WebSocketServer({ noServer: true});
+
+
+//const wsServer = new WebSocketServer({ port: PORT });
 global.currentSceneId;
 global.result = new Uint8Array();
 
-wsServer.on('connection', onConnect);
+wsBlackboxRecognition.on('connection', onConnect);
 function onConnect(wsClient) {
     let clientId = uuidv4();
     console.log('Новый пользователь '+clientId);
@@ -166,6 +171,19 @@ function onConnect(wsClient) {
         }
     });
 }
+
+site.on('connection', siteConnect);
+function siteConnect(wsClient) {
+    console.log('Новый пользователь ');
+
+    wsClient.on('close', function() {
+        console.log('Пользователь отключился');
+    });
+
+    wsClient.on('message', function(message) {
+        wsClient.send('testClient');
+    });
+}
  
 async function getSceneFile(sceneid) { // creating archives
     return	new Promise((resolve, reject) => {
@@ -223,7 +241,28 @@ async function getSceneFile(sceneid) { // creating archives
         });
     }
 
-console.log('Сервер запущен на 9000 порту');
+
+server.on('upgrade', function upgrade(request, socket, head) {
+    const { pathname } = parse(request.url);
+  
+    if (pathname === '/ws') {
+        wsBlackboxRecognition.handleUpgrade(request, socket, head, function done(ws) {
+            wsBlackboxRecognition.emit('connection', ws, request);
+      });
+    } else if (pathname === '/site') {
+        site.handleUpgrade(request, socket, head, function done(ws) {
+            site.emit('connection', ws, request);
+        });
+        }
+        else {
+      socket.destroy();
+    }
+  });
+  
+  server.listen(PORT);
+
+  console.log('Сервер запущен на 9000 порту');
+
 
 export {onConnect};
 
