@@ -15,7 +15,6 @@ const wsBlackboxRecognition = new WebSocketServer({ noServer: true});
 const site = new WebSocketServer({ noServer: true});
 
 
-//const wsServer = new WebSocketServer({ port: PORT });
 global.currentSceneId;
 global.result = new Uint8Array();
 
@@ -253,12 +252,10 @@ server.on('upgrade', function upgrade(request, socket, head) {
         site.handleUpgrade(request, socket, head, function done(ws) {
             site.emit('connection', ws, request);
         });
-        }
-        else {
+        } else {
       socket.destroy();
     }
-  });
-  
+  });  
   server.listen(PORT);
 
   console.log('Сервер запущен на порту: '+ PORT);
