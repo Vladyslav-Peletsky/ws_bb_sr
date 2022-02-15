@@ -8,9 +8,6 @@ import md5 from 'md5';
 import express from 'express';
 import expressWs from 'express-ws';
 
-import os from 'os'
-console.log(os.hostname());
-
 dropTables();
 setTimeout(createTables, 1000); 
 

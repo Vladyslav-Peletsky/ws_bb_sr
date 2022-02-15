@@ -39,8 +39,9 @@ function deleteSession(uuid) {
 }
 
 function newScene(uuid, sceneID) {
+  let url = 'https://ws-bb-sr.herokuapp.com/onlinereco/scene/'+sceneID;
   return	new Promise((resolve, reject) => {
-      pool.query('INSERT INTO dbo.Scenes (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, 1, 1, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1 AND NOT EXISTS (SELECT 1 FROM dbo.Scenes WHERE SceneID = $2);',[uuid,sceneID], (err, res) => {
+      pool.query("INSERT INTO dbo.Scenes (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1 AND NOT EXISTS (SELECT 1 FROM dbo.Scenes WHERE SceneID = $2);",[uuid,sceneID,url], (err, res) => {
           if (err) throw err;
           console.log('newScene:' + sceneID);
           console.log(res.rows);
