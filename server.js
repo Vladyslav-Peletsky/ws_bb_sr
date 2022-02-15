@@ -1,4 +1,5 @@
 import {createTables,dropTables, newSession, updateSession, deleteSession, newScene, finishNewScene, deleteScene, sceneStatuses} from './database.js';
+import {unzipSceneFile, deleteFile, getSceneFile, sceneRecognizedUpdateStatus} from './files.js';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import express from 'express';
