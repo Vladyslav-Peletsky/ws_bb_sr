@@ -38,9 +38,9 @@ function deleteSession(uuid) {
     });
 }
 
-function newScene(uuid, sceneID, length) {
+function newScene(uuid, sceneID) {
   return	new Promise((resolve, reject) => {
-      pool.query('INSERT INTO dbo.Scenes (SceneID, Processed, Length, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, $3,  1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1;',[uuid,sceneID,length], (err, res) => {
+      pool.query('INSERT INTO dbo.Scenes (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, 1, 1, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1 AND NOT EXISTS (SELECT 1 FROM dbo.Scenes WHERE SceneID = $2);',[uuid,sceneID], (err, res) => {
           if (err) throw err;
           console.log('newScene:' + sceneID);
           console.log(res.rows);
@@ -49,7 +49,7 @@ function newScene(uuid, sceneID, length) {
     });
 }
 
-function finishNewScene(uuid, sceneID, checksum) {
+function finishNewScene(sceneID, checksum) {
   return	new Promise((resolve, reject) => {  
       pool.query('UPDATE dbo.Scenes SET Processed = 2, Checksum = $2 WHERE SceneID = $1;',[sceneID,checksum], (err, res) => {
           if (err) throw err;
@@ -60,28 +60,13 @@ function finishNewScene(uuid, sceneID, checksum) {
     });
 }
 
-function sceneRecognized(sceneID, length, checksum) {
+function sceneRecognized(sceneID, checksum) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET Processed = 3, Length = $2, Checksum = $3 WHERE SceneID = $1;',[sceneID, length, checksum], (err, res) => {
+      pool.query('UPDATE dbo.Scenes SET Processed = 3, Checksum = $2 WHERE SceneID = $1;',[sceneID, checksum], (err, res) => {
           if (err) throw err;
           console.log('sceneRecognized:' + sceneID);
           console.log(res.rows);
           resolve(JSON.stringify(res.rows));
-      });
-    });
-}
-
-function finishSendScene(sceneID) {
-  return	new Promise((resolve, reject) => {  
-      pool.query('SELECT sceneid, checksum FROM dbo.scenes WHERE sceneid = $1',[sceneID], (err, res) => {
-          if (err) throw err;
-          console.log('finishSendScene _ uuid :' + sceneID);
-          let finish = {"type":"finish", "data":{} };
-          console.log(res.rows[0].sceneid);
-          finish.data.sceneid = res.rows[0].sceneid;
-          finish.data.checksum = res.rows[0].checksum;
-          console.log('finish - ' + JSON.stringify(finish).replace(/sceneid/g, 'sceneID'));
-          resolve(JSON.stringify(finish).replace(/sceneid/g, 'sceneID'));
       });
     });
 }
@@ -99,16 +84,50 @@ function deleteScene(uuid, sceneID) {
 
 function sceneStatuses(uuid) {
   return new Promise(resolve => {
-    pool.query("SELECT s.SceneID, s.Processed, Length, Checksum FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1 AND s.isActive =1;",[uuid], (err, res) => {
+    pool.query("SELECT s.SceneID, s.Processed, Checksum, TRIM(PutUrl) AS PutUrl, TRIM(GetUrl) AS GetUrl FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1 AND s.isActive =1;",[uuid], (err, res) => {
         if (err) throw err;
         console.log('sceneStatuses _ uuid :' + uuid);
         let sceneStatuses = {"type":"sceneStatuses"};
         sceneStatuses.data = res.rows;
-        console.log('sceneStatuses - ' + JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID'));
-        resolve(JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID'));
+        let result = JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID');
+          result = result.replace(/puturl/g, 'putUrl');
+          result = result.replace(/geturl/g, 'getUrl');
+        console.log(result);
+        resolve(result);
     });
     
   });
 }
 
-export {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, finishSendScene, deleteScene, sceneStatuses};
+
+
+function dropTables() {
+  pool.query("DROP TABLE IF EXISTS dbo.Scenes", (err, res) => {
+      if (err) throw err;
+      console.log('Таблица сцен удалена');
+    });
+  pool.query("DROP TABLE IF EXISTS dbo.ClientSessions", (err, res) => {
+      if (err) throw err;
+      console.log('Таблица сессий удалена');
+    });
+
+}
+
+function createTables() {
+    pool.query("CREATE SCHEMA IF NOT EXISTS dbo", (err, res) => {
+        if (err) throw err;
+        console.log('Схема создана');
+      });
+    pool.query("CREATE TABLE IF NOT EXISTS dbo.Scenes (SceneID uuid NOT NULL, Processed integer NOT NULL, PutUrl character(200), GetUrl character(200), Checksum character(32) NULL, isActive int NOT NULL, DistributorID character(50) NOT NULL, VisitID character(50) NOT NULL, DocumentID character(50) NOT NULL, CustomerID character(50) NOT NULL, EmployeeID character(50) NOT NULL, Custom character(5000) NULL)", (err, res) => {
+        if (err) throw err;
+        console.log('Таблица сцен создана');
+      });
+    pool.query("CREATE TABLE IF NOT EXISTS dbo.ClientSessions (Session uuid NOT NULL, isActive integer, DistributorID character(50) NULL, VisitID character(50) NULL, DocumentID character(50) NULL, CustomerID character(50) NULL, EmployeeID character(50) NULL, Custom character(5000) NULL, CreateDate timestamp without time zone NOT NULL, UpdatedDate timestamp without time zone NOT NULL)", (err, res) => {
+        if (err) throw err;
+        console.log('Таблица сессий создана');
+      });
+}
+
+
+
+export {dropTables, createTables, newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, deleteScene, sceneStatuses};

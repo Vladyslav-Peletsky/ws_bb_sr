@@ -1,6 +1,6 @@
-import { createServer } from 'http';
+//import { createServer } from 'http';
 import { parse } from 'url';
-import {WebSocketServer}  from 'ws';
+//import {WebSocketServer}  from 'ws';
 import {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, finishSendScene, deleteScene, sceneStatuses} from './database.js';
 import { v4 as uuidv4 } from 'uuid';
 import AdmZip  from 'adm-zip';
@@ -9,27 +9,35 @@ import { format } from 'fecha';
 import isUtf8 from 'is-utf8';
 import md5 from 'md5';
 
-const server = createServer();
-const PORT = process.env.PORT || 5000;
-const wsBlackboxRecognition = new WebSocketServer({ noServer: true});
-const site = new WebSocketServer({ noServer: true});
+import express from 'express';
+import expressWs from 'express-ws';
 
+
+const app = expressWs(express()).app;
+app.set('port', process.env.PORT || 3000);
+app.listen(app.get('port'), () => {
+  console.log('Server listening on port %s', app.get('port'));
+});
+
+let connects = [];
 
 global.currentSceneId;
 global.result = new Uint8Array();
 
-wsBlackboxRecognition.on('connection', onConnect);
-function onConnect(wsClient) {
+app.ws('/onlinereco', (ws, req) => {
     let clientId = uuidv4();
     console.log('Новый пользователь '+clientId);
     newSession (clientId);
 
-    wsClient.on('close', function() {
+    ws.on('close', () => {
         console.log('Пользователь отключился'+clientId);
         deleteSession (clientId);
-    });
+            connects = connects.filter(conn => {
+            return (conn === ws) ? false : true;
+            });
+      });
 
-    wsClient.on('message', function(message) {
+    ws.on('message', message => {
         if (isUtf8(message)) {
                 try {
                 const jsonMessage = JSON.parse(message);
@@ -37,7 +45,7 @@ function onConnect(wsClient) {
                     case 'connection':
                         updateSession(clientId, jsonMessage)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
-                            wsClient.send(result);
+                            socket.send(result);
                             });
                         console.log('connection');
                         break;
@@ -45,7 +53,7 @@ function onConnect(wsClient) {
                         global.currentSceneId = jsonMessage.data.sceneID;
                         newScene(clientId, jsonMessage.data.sceneID, jsonMessage.data.length)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
-                            wsClient.send(result);
+                            socket.send(result);
                             });
                         console.log('newScene');
                         break;
@@ -110,12 +118,12 @@ function onConnect(wsClient) {
                         .then(deleteSceneFile).then(function(result) {console.log(result)})
                         .then(clearGlobalVariables).then(function(result) {console.log(result)})
                         .then(() => finishNewScene(clientId, jsonMessage.data.sceneID, jsonMessage.data.checksum).then(function(result) { console.log(result)}))
-                        .then(() => sceneStatuses(clientId)).then(function(result) {wsClient.send(result)})
+                        .then(() => sceneStatuses(clientId)).then(function(result) {socket.send(result)})
                         .then(() => sleep(4000)).then(function(result) {console.log(result)})
                         .then(() => getSceneFile(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
                         .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
                         .then(() => sleep(1000)).then(function(result) {console.log(result)})
-                        .then(() => sceneStatuses(clientId)).then(function(result) {wsClient.send(result)});
+                        .then(() => sceneStatuses(clientId)).then(function(result) {socket.send(result)});
                         
                         } else
                         {
@@ -130,13 +138,13 @@ function onConnect(wsClient) {
                         
                         fs.createReadStream(resultSceneFilePath, {bufferSize: 100 * 1024})
                         .on("data", function(chunk){ 
-                                wsClient.send(chunk);
+                                socket.send(chunk);
                                 console.log(chunk);
                                 })
                         .on('end', function () {
                             sleep(1000)  
                             .then(() => finishSendScene(jsonMessage.data.sceneID)).then(function(result) {
-                                        wsClient.send(result);
+                                        socket.send(result);
                                     }); 
                                 console.log('{"type":"finish","data":{"sceneID":"'+jsonMessage.data.sceneID+'"}}');
                                 });
@@ -145,14 +153,14 @@ function onConnect(wsClient) {
                         break;
                     case 'status':
                         sceneStatuses(clientId).then(function(result) {
-                            wsClient.send(result);
+                            socket.send(result);
                         });
                         console.log('status');
                         break;
                     case 'delete':
                         deleteScene(clientId, jsonMessage.data.sceneID)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
-                            wsClient.send(result);
+                            socket.send(result);
                             });
                         console.log('delete');
                         break;
@@ -167,22 +175,10 @@ function onConnect(wsClient) {
             var buf = new Uint8Array(message);
             console.log('start send file - '+ global.currentSceneId);
             global.result = Buffer.concat([global.result,buf]);
-        }
+        };
     });
-}
+});
 
-site.on('connection', siteConnect);
-function siteConnect(wsClient) {
-    console.log('Новый пользователь ');
-
-    wsClient.on('close', function() {
-        console.log('Пользователь отключился');
-    });
-
-    wsClient.on('message', function(message) {
-        wsClient.send('testClient');
-    });
-}
  
 async function getSceneFile(sceneid) { // creating archives
     return	new Promise((resolve, reject) => {
@@ -238,27 +234,7 @@ async function getSceneFile(sceneid) { // creating archives
                 resolve('Inside test await');
             }, timeout);
         });
-    }
-
-
-server.on('upgrade', function upgrade(request, socket, head) {
-    const { pathname } = parse(request.url);
-  
-    if (pathname === '/ws') {
-        wsBlackboxRecognition.handleUpgrade(request, socket, head, function done(ws) {
-            wsBlackboxRecognition.emit('connection', ws, request);
-      });
-    } else if (pathname === '/site') {
-        site.handleUpgrade(request, socket, head, function done(ws) {
-            site.emit('connection', ws, request);
-        });
-        } else {
-      socket.destroy();
-    }
-  });  
-  server.listen(PORT);
-
-  console.log('Сервер запущен на порту: '+ PORT);
+    };
 
 
 export {onConnect};
