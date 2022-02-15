@@ -9,36 +9,6 @@ const pool = new Pool({
   }
 });
 
-function dropTables() {
 
-  pool.query("DROP TABLE IF EXISTS dbo.Scenes", (err, res) => {
-      if (err) throw err;
-      console.log('Таблица сцен удалена');
-    });
-   
-  pool.query("DROP TABLE IF EXISTS dbo.ClientSessions", (err, res) => {
-      if (err) throw err;
-      console.log('Таблица сессий удалена');
-    });
-
-}
-
-function createTables() {
-
-    pool.query("CREATE SCHEMA IF NOT EXISTS dbo", (err, res) => {
-        if (err) throw err;
-        console.log('Схема создана');
-      });
-
-    pool.query("CREATE TABLE IF NOT EXISTS dbo.Scenes (SceneID uuid NOT NULL, Processed integer NOT NULL, Length integer NULL, Checksum character(32) NULL, isActive int NOT NULL, DistributorID character(50) NOT NULL, VisitID character(50) NOT NULL, DocumentID character(50) NOT NULL, CustomerID character(50) NOT NULL, EmployeeID character(50) NOT NULL, Custom character(5000) NULL)", (err, res) => {
-        if (err) throw err;
-        console.log('Таблица сцен создана');
-      });
-
-    pool.query("CREATE TABLE IF NOT EXISTS dbo.ClientSessions (Session uuid NOT NULL, isActive integer, DistributorID character(50) NULL, VisitID character(50) NULL, DocumentID character(50) NULL, CustomerID character(50) NULL, EmployeeID character(50) NULL, Custom character(5000) NULL, CreateDate timestamp without time zone NOT NULL, UpdatedDate timestamp without time zone NOT NULL)", (err, res) => {
-        if (err) throw err;
-        console.log('Таблица сессий создана');
-      });
-}
 
 export {createTables, dropTables};
