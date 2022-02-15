@@ -123,7 +123,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
   });
  
   app.get('/onlinereco/scene/:sceneid', (req, res) => {
-        let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec' 
+        let scenePath = process.cwd()+'/scenes/result/'+req.params.sceneid+'.rec' 
         res.download(scenePath);
   });
 
