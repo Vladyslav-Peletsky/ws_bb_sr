@@ -13,11 +13,11 @@ setTimeout(createTables, 1000);
 
 const app = expressWs(express()).app;
 app.set('port', process.env.PORT || 3000);
-     app.use(formidableMiddleware({
+/*      app.use(formidableMiddleware({
         encoding: 'utf-8',
         uploadDir: './scenes/scenesOffline',
         multiples: true, // req.files to be arrays of files
-      }));      
+      }));   */    
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'));
 });
@@ -121,6 +121,14 @@ app.ws('/onlinereco', (ws, req) => {
 
 
 app.put('/onlinereco/scene/:sceneid', (req, res) => {
+   
+    var writeStream = fs.createWriteStream(scenePath);
+    req.pipe(writeStream);
+    req.on('end', function () {
+    res.send('ok');
+    res.end();
+    });
+/*    
     console.log('PUT:'+req.params.sceneid);
     //let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
 
@@ -131,13 +139,8 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
     let answer = JSON.parse('{"success":true}')
     res.setHeader("Content-Type", "application/json");
     res.status(201).json(answer);
-    res.end();
-/*         var writeStream = fs.createWriteStream(scenePath);
-        req.pipe(writeStream);
-        req.on('end', function () {
-        res.send('ok');
-        res.end();
-        }); */
+    res.end(); */
+
   });
  
   app.get('/onlinereco/scene/:sceneid', (req, res) => {
@@ -145,7 +148,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         res.download(scenePath);
   });
 
-  app.post('/offlinereco', (req, res) => {
+/*   app.post('/offlinereco', (req, res) => {
 
     let sceneIdUpload = JSON.parse(req.fields.scenes)[0].sceneID;
 
@@ -178,7 +181,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
     res.end();
    
     
-  }); 
+  });  */
  
 
 
@@ -191,7 +194,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         });
     };
 
-    async function sendPostResult (url, scenes, resultFilePath, sceneID) {
+/*     async function sendPostResult (url, scenes, resultFilePath, sceneID) {
         delete scenes[0].responseStatus;
         scenes[0].fileName = sceneID+'.rec';
 
@@ -215,5 +218,5 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
                     console.log('upload successful', body)
                 }
             });
-    });
-}; 
+    }); 
+}; */
