@@ -45,27 +45,52 @@ async function unzipSceneFile(sceneid, scenePath) {
                   }
                   //var content = "inner content of the file";
 
-                  let sceneResult = JSON.parse(fs.readFileSync(sceneFilePath, 'utf8'));
-                  let sceneReport = JSON.parse(fs.readFileSync('./defaultSceneResult/report.json', 'utf8'))
+                  let sceneResult = {};
+                  let sceneReport = {};
                   let copy = {};
-                  setTimeout(copyScenesResults, 3000); 
                   
-                  function copyScenesResults() {
-                      copy = Object.assign(sceneReport, sceneResult);
-                      //Update data
-                        copy.documentRecognitionStatusCode = 'RecognizedOk';
-                        copy.metaData.notRecognizePhotosCounter = 0;
-                        copy.report.reportDate = format(Date.now(), 'isoDateTime');
-                        copy.sceneID = sceneid;
-                  
-                        zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
-                        
-                        zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file
-                                        
-                        zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
-                        console.log('recognizedStep_1');
-                    };
-            resolve('createResulScene: '+sceneid);
+                        function sceneResultFun(sceneFilePath) {
+                            return new Promise(function(resolve){
+                                sceneResult = JSON.parse(fs.readFileSync(sceneFilePath, 'utf8'));
+                                resolve('sceneResultFun');
+                            });
+                        };
+                        function sceneReportFun() {
+                            return new Promise(function(resolve){
+                                sceneReport = JSON.parse(fs.readFileSync('./defaultSceneResult/report.json', 'utf8'));
+                                resolve('sceneReport');
+                            });
+                        }
+                        function copyResults() {
+                            return new Promise(function(resolve){
+                                copy = Object.assign(sceneReport, sceneResult);
+                                //Update data
+                                copy.documentRecognitionStatusCode = 'RecognizedOk';
+                                copy.metaData.notRecognizePhotosCounter = 0;
+                                copy.report.reportDate = format(Date.now(), 'isoDateTime');
+                                copy.sceneID = sceneid;
+                                resolve('copy');
+                            });
+                        }
+                        function zipResults(resultSceneFilePath) {
+                            return new Promise(function(resolve){
+                                zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
+                                zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file          
+                                zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
+                                resolve('zipResults-recognizedStep_1');
+                                });
+
+                        }
+                        sceneResultFun(sceneFilePath).then(function(result) {console.log(result)})
+                        .then(() => sceneReportFun().then(function(result) { console.log(result)}))
+                        .then(() => copyResults().then(function(result) { console.log(result)}))
+                        .then(() => zipResults(resultSceneFilePath)).then(function(result) {console.log(result)});
+                        /* f1()
+                        .then(function() {return f2();})
+                        .then(function() {return f3();})
+                        .then(function() {console.log('Done!');}); */
+            
+                        resolve('createResulScene: '+sceneid);
             });          
     }
 
