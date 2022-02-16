@@ -4,12 +4,22 @@ import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import express from 'express';
 import expressWs from 'express-ws';
+import formidableMiddleware from 'express-formidable';
+import request from 'request';
+import FormData from 'form-data';
+
+
 
 dropTables();
 setTimeout(createTables, 1000); 
 
 
 const app = expressWs(express()).app;
+app.use(formidableMiddleware({
+    encoding: 'utf-8',
+    uploadDir: './scenes/scenesOffline',
+    multiples: true, // req.files to be arrays of files
+  }));     
 app.set('port', process.env.PORT || 3000);
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'));
@@ -70,11 +80,11 @@ app.ws('/onlinereco', (ws, req) => {
                                 socket.send(result);
                                });
                         })
-                        .then(() => sleep(4000)).then(function(result) {console.log(result)})
+                        .then(() => sleep(6000)).then(function(result) {console.log(result)})
                         .then(() => getSceneFile(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
                         .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
                         .then(() => deleteFile(sceneJsonPath).then(function(result) { console.log(result)}))
-                        .then(() => sleep(1000)).then(function(result) {console.log(result)})
+                        .then(() => sleep(2000)).then(function(result) {console.log(result)})
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             connects.forEach(socket => {
                                 socket.send(result);
@@ -128,6 +138,38 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         res.download(scenePath);
   });
 
+ app.post('/offlinereco', (req, res) => {
+    let sceneIdUpload = JSON.parse(req.fields.scenes)[0].sceneID;
+
+    let answer = JSON.parse(req.fields.scenes);
+        answer[0].responseStatus = 201;
+        delete answer[0].fileName;
+        delete answer[0].fileChecksum;
+        delete answer[0].documentRecognitionStatusCode;
+
+    let resulturl = JSON.parse(JSON.stringify(req.headers))['result-url'];
+
+    let documentRecognitionStatusCode = JSON.parse(req.fields.scenes)[0].documentRecognitionStatusCode;
+    if (documentRecognitionStatusCode == 'NeedRecognition')
+        {
+            fs.rename(req.files[sceneIdUpload].path, './scenes/scenesOffline/'+sceneIdUpload+'.rec', err => {
+                if(err) throw err; // не удалось переместить файл
+                console.log('Файл успешно перемещён');
+            });
+        
+             sleep(3000).then(function(result) {console.log(result)})
+            .then(() => unzipSceneFile(sceneIdUpload, './scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) {console.log(result)}))
+            .then(() => deleteFile('./scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) { console.log(result)}))
+            .then(() => sleep(6000)).then(function(result) {console.log(result)})
+            .then(() => getSceneFile(sceneIdUpload)).then(function(result) {console.log(result)})
+            .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIdUpload+'.rec', sceneIdUpload)).then(function(result) {console.log(result)})
+         }
+    res.status(207).json(answer)
+    
+    
+  });
+ 
+
 
   //таймаут
      async function sleep(timeout) {
@@ -137,3 +179,30 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
             }, timeout);
         });
     };
+
+    async function sendPostResult (url, scenes, resultFilePath, sceneID) {
+        delete scenes[0].responseStatus;
+        scenes[0].fileName = sceneID+'.rec';
+
+        return	new Promise((resolve, reject) => {
+            var formData = {
+                'scenes': JSON.stringify(scenes),
+                [sceneID]: fs.createReadStream(resultFilePath)
+            };
+            var uploadOptions = {
+                "url": url,
+                "method": "POST",
+                "headers": {
+                    "Token": "8CEB1B0C-1FEB-48EA-8F96-BB4DDBBB06D9"
+                },
+                "formData": formData
+            }
+            var req = request(uploadOptions, function(err, resp, body) {
+                if (err) {
+                    console.log('Error ', err);
+                } else {
+                    console.log('upload successful', body)
+                }
+            });
+});
+};

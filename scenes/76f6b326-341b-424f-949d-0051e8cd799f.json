@@ -1,0 +1,535 @@
+{
+  "documentRecognitionStatusCode" : "RecognizedOK",
+  "estimatedTime" : 0,
+  "report" : {
+    "shelfs" : [ {
+      "shelfNum" : 0,
+      "mergedPhotoCoord" : [ 6, 369, 1745, 692 ],
+      "additionalFields" : { },
+      "places" : [ {
+        "placeNum" : 7,
+        "mergedPhotoCoord" : [ 591, 555, 656, 642 ],
+        "products" : [ {
+          "clientProductID" : "26",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 591, 555, 656, 642 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Classic Black tea 100g Carton"
+          },
+          "tags" : [ ]
+        } ]
+      }, {
+        "placeNum" : 8,
+        "mergedPhotoCoord" : [ 664, 522, 744, 646 ],
+        "products" : [ {
+          "clientProductID" : "26",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 664, 522, 744, 646 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Classic Black tea 100g Carton"
+          },
+          "tags" : [ ]
+        } ]
+      }, {
+        "placeNum" : 9,
+        "mergedPhotoCoord" : [ 746, 508, 827, 642 ],
+        "products" : [ {
+          "clientProductID" : "55",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 746, 508, 827, 642 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Summer Thyme Black tea 100g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 15.0,
+            "mergedPhotoCoord" : [ 804, 640, 855, 681 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 10,
+        "mergedPhotoCoord" : [ 827, 369, 910, 640 ],
+        "products" : [ {
+          "clientProductID" : "55",
+          "productNumber" : 0,
+          "productPlaceNum" : 1,
+          "mergedPhotoCoord" : [ 835, 369, 910, 510 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Summer Thyme Black tea 100g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 15.0,
+            "mergedPhotoCoord" : [ 804, 640, 855, 681 ]
+          } ]
+        }, {
+          "clientProductID" : "55",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 827, 512, 904, 640 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Summer Thyme Black tea 100g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 15.0,
+            "mergedPhotoCoord" : [ 804, 640, 855, 681 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 11,
+        "mergedPhotoCoord" : [ 905, 370, 988, 641 ],
+        "products" : [ {
+          "clientProductID" : "55",
+          "productNumber" : 0,
+          "productPlaceNum" : 1,
+          "mergedPhotoCoord" : [ 912, 370, 988, 507 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Summer Thyme Black tea 100g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 15.0,
+            "mergedPhotoCoord" : [ 804, 640, 855, 681 ]
+          } ]
+        }, {
+          "clientProductID" : "55",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 905, 510, 984, 641 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Summer Thyme Black tea 100g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 15.0,
+            "mergedPhotoCoord" : [ 804, 640, 855, 681 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 12,
+        "mergedPhotoCoord" : [ 984, 384, 1063, 640 ],
+        "products" : [ {
+          "clientProductID" : "55",
+          "productNumber" : 0,
+          "productPlaceNum" : 1,
+          "mergedPhotoCoord" : [ 987, 384, 1055, 503 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Summer Thyme Black tea 100g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 15.0,
+            "mergedPhotoCoord" : [ 804, 640, 855, 681 ]
+          } ]
+        }, {
+          "clientProductID" : "55",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 984, 504, 1063, 640 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Summer Thyme Black tea 100g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 15.0,
+            "mergedPhotoCoord" : [ 804, 640, 855, 681 ]
+          } ]
+        } ]
+      } ]
+    }, {
+      "shelfNum" : 1,
+      "mergedPhotoCoord" : [ 0, 697, 1686, 946 ],
+      "additionalFields" : { },
+      "places" : [ {
+        "placeNum" : 9,
+        "mergedPhotoCoord" : [ 591, 796, 681, 934 ],
+        "products" : [ {
+          "clientProductID" : "36",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 591, 796, 681, 934 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Ceylon FBOPF Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 69.0,
+            "mergedPhotoCoord" : [ 590, 905, 687, 971 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 10,
+        "mergedPhotoCoord" : [ 681, 796, 774, 933 ],
+        "products" : [ {
+          "clientProductID" : "36",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 681, 796, 774, 933 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Ceylon FBOPF Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 69.0,
+            "mergedPhotoCoord" : [ 590, 905, 687, 971 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 11,
+        "mergedPhotoCoord" : [ 775, 793, 871, 933 ],
+        "products" : [ {
+          "clientProductID" : "36",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 775, 793, 871, 933 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Ceylon FBOPF Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 69.0,
+            "mergedPhotoCoord" : [ 590, 905, 687, 971 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 12,
+        "mergedPhotoCoord" : [ 870, 791, 964, 932 ],
+        "products" : [ {
+          "clientProductID" : "36",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 870, 791, 964, 932 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Ceylon FBOPF Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 69.0,
+            "mergedPhotoCoord" : [ 590, 905, 687, 971 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 13,
+        "mergedPhotoCoord" : [ 962, 790, 1064, 930 ],
+        "products" : [ {
+          "clientProductID" : "36",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 962, 790, 1064, 930 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Ceylon FBOPF Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 69.0,
+            "mergedPhotoCoord" : [ 590, 905, 687, 971 ]
+          } ]
+        } ]
+      } ]
+    }, {
+      "shelfNum" : 2,
+      "mergedPhotoCoord" : [ 0, 979, 1743, 1201 ],
+      "additionalFields" : { },
+      "places" : [ {
+        "placeNum" : 9,
+        "mergedPhotoCoord" : [ 591, 1065, 680, 1182 ],
+        "products" : [ {
+          "clientProductID" : "19",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 591, 1065, 680, 1182 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS English Breakfast Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 26.0,
+            "mergedPhotoCoord" : [ 587, 1166, 680, 1228 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 10,
+        "mergedPhotoCoord" : [ 706, 1064, 795, 1193 ],
+        "products" : [ {
+          "clientProductID" : "19",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 706, 1064, 795, 1193 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS English Breakfast Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 26.0,
+            "mergedPhotoCoord" : [ 587, 1166, 680, 1228 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 11,
+        "mergedPhotoCoord" : [ 784, 1062, 844, 1187 ],
+        "products" : [ {
+          "clientProductID" : "19",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 784, 1062, 844, 1187 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS English Breakfast Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 26.0,
+            "mergedPhotoCoord" : [ 587, 1166, 680, 1228 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 12,
+        "mergedPhotoCoord" : [ 844, 1060, 928, 1187 ],
+        "products" : [ {
+          "clientProductID" : "19",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 844, 1060, 928, 1187 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS English Breakfast Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 26.0,
+            "mergedPhotoCoord" : [ 587, 1166, 680, 1228 ]
+          } ]
+        } ]
+      } ]
+    }, {
+      "shelfNum" : 3,
+      "mergedPhotoCoord" : [ 1, 1220, 1721, 1584 ],
+      "additionalFields" : { },
+      "places" : [ {
+        "placeNum" : 8,
+        "mergedPhotoCoord" : [ 572, 1288, 648, 1403 ],
+        "products" : [ {
+          "clientProductID" : "25",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 572, 1288, 648, 1403 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Earl Grey Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 199.0,
+            "mergedPhotoCoord" : [ 584, 1398, 674, 1460 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 9,
+        "mergedPhotoCoord" : [ 653, 1299, 731, 1420 ],
+        "products" : [ {
+          "clientProductID" : "25",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 653, 1299, 731, 1420 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Earl Grey Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 199.0,
+            "mergedPhotoCoord" : [ 584, 1398, 674, 1460 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 10,
+        "mergedPhotoCoord" : [ 733, 1293, 811, 1405 ],
+        "products" : [ {
+          "clientProductID" : "25",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 733, 1293, 811, 1405 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Earl Grey Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 199.0,
+            "mergedPhotoCoord" : [ 584, 1398, 674, 1460 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 11,
+        "mergedPhotoCoord" : [ 810, 1294, 896, 1407 ],
+        "products" : [ {
+          "clientProductID" : "25",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 810, 1294, 896, 1407 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Earl Grey Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 199.0,
+            "mergedPhotoCoord" : [ 584, 1398, 674, 1460 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 12,
+        "mergedPhotoCoord" : [ 905, 1302, 993, 1418 ],
+        "products" : [ {
+          "clientProductID" : "25",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 905, 1302, 993, 1418 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Earl Grey Black tea 200g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 199.0,
+            "mergedPhotoCoord" : [ 584, 1398, 674, 1460 ]
+          } ]
+        } ]
+      } ]
+    }, {
+      "shelfNum" : 4,
+      "mergedPhotoCoord" : [ 1, 1459, 1704, 1781 ],
+      "additionalFields" : { },
+      "places" : [ {
+        "placeNum" : 8,
+        "mergedPhotoCoord" : [ 582, 1498, 678, 1636 ],
+        "products" : [ {
+          "clientProductID" : "37",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 582, 1498, 678, 1636 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Classic Black tea 500g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 99.0,
+            "mergedPhotoCoord" : [ 597, 1638, 679, 1675 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 9,
+        "mergedPhotoCoord" : [ 675, 1494, 776, 1636 ],
+        "products" : [ {
+          "clientProductID" : "37",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 675, 1494, 776, 1636 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Classic Black tea 500g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 99.0,
+            "mergedPhotoCoord" : [ 597, 1638, 679, 1675 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 10,
+        "mergedPhotoCoord" : [ 781, 1492, 878, 1629 ],
+        "products" : [ {
+          "clientProductID" : "37",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 781, 1492, 878, 1629 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Classic Black tea 500g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 99.0,
+            "mergedPhotoCoord" : [ 597, 1638, 679, 1675 ]
+          } ]
+        } ]
+      }, {
+        "placeNum" : 11,
+        "mergedPhotoCoord" : [ 875, 1494, 975, 1623 ],
+        "products" : [ {
+          "clientProductID" : "37",
+          "productNumber" : 0,
+          "productPlaceNum" : 0,
+          "mergedPhotoCoord" : [ 875, 1494, 975, 1623 ],
+          "additionalFields" : {
+            "skuName" : "Ahmad Tea RUS Classic Black tea 500g Carton"
+          },
+          "tags" : [ {
+            "tagTypeCode" : 1,
+            "tagPrice" : 99.0,
+            "mergedPhotoCoord" : [ 597, 1638, 679, 1675 ]
+          } ]
+        } ]
+      } ]
+    }, {
+      "shelfNum" : 5,
+      "mergedPhotoCoord" : [ 0, 1681, 1079, 1866 ],
+      "additionalFields" : { },
+      "places" : [ ]
+    } ],
+    "mergedPhoto" : {
+      "photoKey" : 0,
+      "photoAngle" : 0
+    },
+    "reportDate" : "2022-02-07T14:15:27+02:00",
+    "errors" : { }
+  },
+  "sceneID" : "76f6b326-341b-424f-949d-0051e8cd799f",
+  "visitID" : "a801b9f9-79c9-4cae-a8e5-b94a779333c4",
+  "employeeID" : "2",
+  "documentID" : "a0e7ed73-44f5-4d0c-b4e7-d8f6caee7355",
+  "distributorID" : "111",
+  "customerID" : "9",
+  "metaData" : {
+    "photosCounter" : 2,
+    "notRecognizePhotosCounter" : 0
+  },
+  "photos" : [ {
+    "photoKey" : 1,
+    "photoAngle" : 0,
+    "photoUrl" : "https://tea-api.shelfmatch.com/session-image/7082708d-bb2e-4f39-a489-2f4cb2f1afa3/0_0_1638353781661.jpg",
+    "photoFile" : "0_0_1638353781661.jpg",
+    "photoDate" : "2021-12-01T12:16:21+02:00",
+    "pitch" : -0.24258831143379211,
+    "roll" : -0.04303060844540596,
+    "column" : 0,
+    "row" : 0
+  }, {
+    "photoKey" : 2,
+    "photoAngle" : 0,
+    "photoUrl" : "https://tea-api.shelfmatch.com/session-image/7082708d-bb2e-4f39-a489-2f4cb2f1afa3/1_0_1638353791099.jpg",
+    "photoFile" : "1_0_1638353791099.jpg",
+    "photoDate" : "2021-12-01T12:16:31+02:00",
+    "pitch" : -0.2541690766811371,
+    "roll" : -0.01792987994849682,
+    "column" : 1,
+    "row" : 0
+  } ],
+  "sceneDate" : "2022-02-07T14:15:27+02:00",
+  "sceneTypeCode" : "warm_various_na",
+  "sceneTypeName" : "Теплая полка",
+  "status" : "Success",
+  "custom" : {
+    "distributor" : {
+      "distributorId" : 111
+    },
+    "employee" : {
+      "agentId" : "111_2",
+      "employeeId" : 2,
+      "employeeName" : "(MR) Sergey Sergeev",
+      "positionId" : 2,
+      "positionName" : "Merchandiser"
+    },
+    "marketplace" : {
+      "marketplaceAddress" : "Москва г, Никулинская ул, 21",
+      "marketplaceId" : "111_9",
+      "marketplaceName" : "Перекрёсток",
+      "marketplaceType" : "Супермаркет"
+    }
+  }
+}
