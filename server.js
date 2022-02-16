@@ -121,7 +121,7 @@ app.ws('/onlinereco', (ws, req) => {
 
 
 app.put('/onlinereco/scene/:sceneid', (req, res) => {
-   
+    let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
     var writeStream = fs.createWriteStream(scenePath);
     req.pipe(writeStream);
     req.on('end', function () {
