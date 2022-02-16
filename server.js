@@ -128,7 +128,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         if(err) throw err; // не удалось переместить файл
         console.log('Файл успешно перемещён');
     });
-    let answer = JSON.parse('{"success":true}');
+    let answer = JSON.parse('{"success":true}')
     res.status(201).json(answer);
     res.end();
 /*         var writeStream = fs.createWriteStream(scenePath);
