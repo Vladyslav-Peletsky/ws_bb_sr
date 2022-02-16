@@ -129,6 +129,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         console.log('Файл успешно перемещён');
     });
     let answer = JSON.parse('{"success":true}')
+    res.setHeader("Content-Type", "application/json");
     res.status(201).json(answer);
     res.end();
 /*         var writeStream = fs.createWriteStream(scenePath);
@@ -172,9 +173,10 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
             .then(() => sleep(4000)).then(function(result) {console.log(result)})
             .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIdUpload+'.rec', sceneIdUpload)).then(function(result) {console.log(result)})
          }
-    res.status(207).json(answer);
+         res.setHeader("Content-Type", "application/json");
+         res.status(207).json(answer);
     res.end();
-    
+   
     
   }); 
  
