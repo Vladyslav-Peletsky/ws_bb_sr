@@ -47,7 +47,12 @@ async function unzipSceneFile(sceneid, scenePath) {
 
                   let sceneResult = JSON.parse(fs.readFileSync(sceneFilePath, 'utf8'));
                   let sceneReport = JSON.parse(fs.readFileSync('./defaultSceneResult/report.json', 'utf8'))
-                  let copy = Object.assign(sceneReport, sceneResult);
+                  let copy = {};
+                  setTimeout(copyScenesResults, 3000); 
+                  function copyScenesResults() {
+                      copy = Object.assign(sceneReport, sceneResult);
+                    };
+                  
                   //Update data
                   copy.documentRecognitionStatusCode = 'RecognizedOk';
                   copy.metaData.notRecognizePhotosCounter = 0;
