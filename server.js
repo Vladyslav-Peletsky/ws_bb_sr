@@ -124,19 +124,6 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
     res.send('ok');
     res.end();
     });
-/*     console.log(req);
-    console.log('PUT:'+req.params.sceneid);
-    //let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
-
-    fs.rename(req.files['file'].path, './scenes/'+req.params.sceneid+'.rec', err => {
-        if(err) throw err; // не удалось переместить файл
-        console.log('Файл успешно перемещён');
-    });
-    let answer = JSON.parse('{"success":true}')
-    res.setHeader("Content-Type", "application/json");
-    res.status(201).json(answer);
-    res.end(); */
-
   });
  
   app.get('/onlinereco/scene/:sceneid', (req, res) => {
