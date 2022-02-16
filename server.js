@@ -122,15 +122,14 @@ app.ws('/onlinereco', (ws, req) => {
 
 app.put('/onlinereco/scene/:sceneid', (req, res) => {
     console.log('PUT:'+req.params.sceneid);
-    console.log(req.files);
     //let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
-        
 
     fs.rename(req.files['file'].path, './scenes/'+req.params.sceneid+'.rec', err => {
         if(err) throw err; // не удалось переместить файл
         console.log('Файл успешно перемещён');
     });
-    res.status(201);
+    let answer = JSON.parse('{"success":true}');
+    res.status(201).json(answer);
     res.end();
 /*         var writeStream = fs.createWriteStream(scenePath);
         req.pipe(writeStream);
