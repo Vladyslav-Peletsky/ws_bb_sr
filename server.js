@@ -6,21 +6,18 @@ import express from 'express';
 import expressWs from 'express-ws';
 import formidableMiddleware from 'express-formidable';
 import request from 'request';
-import FormData from 'form-data';
-
-
 
 dropTables();
 setTimeout(createTables, 1000); 
 
 
 const app = expressWs(express()).app;
-app.use(formidableMiddleware({
-    encoding: 'utf-8',
-    uploadDir: './scenes/scenesOffline',
-    multiples: true, // req.files to be arrays of files
-  }));     
 app.set('port', process.env.PORT || 3000);
+     app.use(formidableMiddleware({
+        encoding: 'utf-8',
+        uploadDir: './scenes/scenesOffline',
+        multiples: true, // req.files to be arrays of files
+      }));      
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'));
 });
@@ -124,13 +121,23 @@ app.ws('/onlinereco', (ws, req) => {
 
 
 app.put('/onlinereco/scene/:sceneid', (req, res) => {
-        let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
+    console.log('PUT:'+req.params.sceneid);
+    console.log(req.files);
+    //let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
         
-        var writeStream = fs.createWriteStream(scenePath);
+
+    fs.rename(req.files['file'].path, './scenes/'+req.params.sceneid+'.rec', err => {
+        if(err) throw err; // не удалось переместить файл
+        console.log('Файл успешно перемещён');
+    });
+    res.status(201);
+    res.end();
+/*         var writeStream = fs.createWriteStream(scenePath);
         req.pipe(writeStream);
         req.on('end', function () {
         res.send('ok');
-        });
+        res.end();
+        }); */
   });
  
   app.get('/onlinereco/scene/:sceneid', (req, res) => {
@@ -138,7 +145,8 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         res.download(scenePath);
   });
 
- app.post('/offlinereco', (req, res) => {
+  app.post('/offlinereco', (req, res) => {
+
     let sceneIdUpload = JSON.parse(req.fields.scenes)[0].sceneID;
 
     let answer = JSON.parse(req.fields.scenes);
@@ -165,10 +173,11 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
             .then(() => sleep(4000)).then(function(result) {console.log(result)})
             .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIdUpload+'.rec', sceneIdUpload)).then(function(result) {console.log(result)})
          }
-    res.status(207).json(answer)
+    res.status(207).json(answer);
+    res.end();
     
     
-  });
+  }); 
  
 
 
@@ -205,5 +214,5 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
                     console.log('upload successful', body)
                 }
             });
-});
-};
+    });
+}; 
