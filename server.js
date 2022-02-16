@@ -4,20 +4,16 @@ import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import express from 'express';
 import expressWs from 'express-ws';
-import formidableMiddleware from 'express-formidable';
+import Busboy from 'busboy';
 import request from 'request';
 
 dropTables();
 setTimeout(createTables, 1000); 
 
 
+
 const app = expressWs(express()).app;
 app.set('port', process.env.PORT || 3000);
-      app.use(formidableMiddleware({
-        encoding: 'utf-8',
-        uploadDir: './scenes/scenesOffline',
-        multiples: true, // req.files to be arrays of files
-      }));       
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'));
 });
@@ -121,14 +117,14 @@ app.ws('/onlinereco', (ws, req) => {
 
 
 app.put('/onlinereco/scene/:sceneid', (req, res) => {
-/*     let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
+    let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
     var writeStream = fs.createWriteStream(scenePath);
     req.pipe(writeStream);
     req.on('end', function () {
     res.send('ok');
     res.end();
-    }); */
-   
+    });
+/*     console.log(req);
     console.log('PUT:'+req.params.sceneid);
     //let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
 
@@ -139,7 +135,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
     let answer = JSON.parse('{"success":true}')
     res.setHeader("Content-Type", "application/json");
     res.status(201).json(answer);
-    res.end();
+    res.end(); */
 
   });
  
@@ -149,38 +145,43 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
   });
 
   app.post('/offlinereco', (req, res) => {
-
-    let sceneIdUpload = JSON.parse(req.fields.scenes)[0].sceneID;
-
-    let answer = JSON.parse(req.fields.scenes);
+    //const upload = multer({ dest: './scenes/scenesOffline' });
+    var busboy = new Busboy({ headers: req.headers });
+    let answer = [];
+    
+    busboy.on('field', (fieldname, file, filename, encoding, mimetype) => { 
+        let sceneIdUpload = JSON.parse(file)[0].sceneID;
+        answer = JSON.parse(file);
         answer[0].responseStatus = 201;
         delete answer[0].fileName;
         delete answer[0].fileChecksum;
         delete answer[0].documentRecognitionStatusCode;
 
-    let resulturl = JSON.parse(JSON.stringify(req.headers))['result-url'];
+        let resulturl = JSON.parse(JSON.stringify(req.headers))['result-url'];
+        let documentRecognitionStatusCode = JSON.parse(file)[0].documentRecognitionStatusCode;
+        if (documentRecognitionStatusCode == 'NeedRecognition')
+            {
+                sleep(5000).then(function(result) {console.log(result)})
+                .then(() => unzipSceneFile(sceneIdUpload, './scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) {console.log(result)}))
+                .then(() => deleteFile('./scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) { console.log(result)}))
+                .then(() => sleep(6000)).then(function(result) {console.log(result)})
+                .then(() => getSceneFile(sceneIdUpload)).then(function(result) {console.log(result)})
+                .then(() => sleep(4000)).then(function(result) {console.log(result)})
+                .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIdUpload+'.rec', sceneIdUpload)).then(function(result) {console.log(result)})
+            }
 
-    let documentRecognitionStatusCode = JSON.parse(req.fields.scenes)[0].documentRecognitionStatusCode;
-    if (documentRecognitionStatusCode == 'NeedRecognition')
-        {
-            fs.rename(req.files[sceneIdUpload].path, './scenes/scenesOffline/'+sceneIdUpload+'.rec', err => {
-                if(err) throw err; // не удалось переместить файл
-                console.log('Файл успешно перемещён');
-            });
-        
-             sleep(5000).then(function(result) {console.log(result)})
-            .then(() => unzipSceneFile(sceneIdUpload, './scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) {console.log(result)}))
-            .then(() => deleteFile('./scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) { console.log(result)}))
-            .then(() => sleep(6000)).then(function(result) {console.log(result)})
-            .then(() => getSceneFile(sceneIdUpload)).then(function(result) {console.log(result)})
-            .then(() => sleep(4000)).then(function(result) {console.log(result)})
-            .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIdUpload+'.rec', sceneIdUpload)).then(function(result) {console.log(result)})
-         }
-         res.setHeader("Content-Type", "application/json");
-         res.status(207).json(answer);
-    res.end();
-   
-    
+      });
+    busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+        console.log(fieldname);
+        file.pipe(fs.createWriteStream('./scenes/scenesOffline/'+fieldname+'.rec'));
+    });
+    busboy.on('close', function() {
+      console.log('Upload complete');
+      res.setHeader("Content-Type", "application/json");
+      res.status(207).json(answer);
+      res.end();
+    });
+    return req.pipe(busboy);
   }); 
  
 
@@ -194,7 +195,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         });
     };
 
-/*     async function sendPostResult (url, scenes, resultFilePath, sceneID) {
+     async function sendPostResult (url, scenes, resultFilePath, sceneID) {
         delete scenes[0].responseStatus;
         scenes[0].fileName = sceneID+'.rec';
 
@@ -219,4 +220,4 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
                 }
             });
     }); 
-}; */
+}; 
