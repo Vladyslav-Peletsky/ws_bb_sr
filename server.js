@@ -73,11 +73,13 @@ app.ws('/onlinereco', (ws, req) => {
                                 socket.send(result);
                                });
                         })
-                        .then(() => sleep(6000)).then(function(result) {console.log(result)})
-                        .then(() => getSceneFile(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
-                        .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
-                        .then(() => deleteFile(sceneJsonPath).then(function(result) { console.log(result)}))
                         .then(() => sleep(2000)).then(function(result) {console.log(result)})
+                        .then(() => getSceneFile(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
+                        .then(() => sleep(4000)).then(function(result) {console.log(result)})
+                        .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
+                        .then(() => sleep(6000)).then(function(result) {console.log(result)})
+                        .then(() => deleteFile(sceneJsonPath).then(function(result) { console.log(result)}))
+                        .then(() => sleep(8000)).then(function(result) {console.log(result)})
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             connects.forEach(socket => {
                                 socket.send(result);

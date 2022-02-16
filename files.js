@@ -69,22 +69,18 @@ async function unzipSceneFile(sceneid, scenePath) {
                                 copy.metaData.notRecognizePhotosCounter = 0;
                                 copy.report.reportDate = format(Date.now(), 'isoDateTime');
                                 copy.sceneID = sceneid;
-                                resolve('copy');
-                            });
-                        }
-                        function zipResults(resultSceneFilePath) {
-                            return new Promise(function(resolve){
                                 zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
                                 zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file          
                                 zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
                                 resolve('zipResults-recognizedStep_1');
-                                });
 
+                                resolve('copy');
+                            });
                         }
+         
                         sceneResultFun(sceneFilePath).then(function(result) {console.log(result)})
                         .then(() => sceneReportFun().then(function(result) { console.log(result)}))
-                        .then(() => copyResults().then(function(result) { console.log(result)}))
-                        .then(() => zipResults(resultSceneFilePath)).then(function(result) {console.log(result)});
+                        .then(() => copyResults().then(function(result) { console.log(result)}));
                         /* f1()
                         .then(function() {return f2();})
                         .then(function() {return f3();})
