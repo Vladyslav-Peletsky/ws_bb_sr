@@ -157,11 +157,12 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
                 console.log('Файл успешно перемещён');
             });
         
-             sleep(10000).then(function(result) {console.log(result)})
+             sleep(5000).then(function(result) {console.log(result)})
             .then(() => unzipSceneFile(sceneIdUpload, './scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) {console.log(result)}))
             .then(() => deleteFile('./scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) { console.log(result)}))
-            .then(() => sleep(10000)).then(function(result) {console.log(result)})
+            .then(() => sleep(6000)).then(function(result) {console.log(result)})
             .then(() => getSceneFile(sceneIdUpload)).then(function(result) {console.log(result)})
+            .then(() => sleep(4000)).then(function(result) {console.log(result)})
             .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIdUpload+'.rec', sceneIdUpload)).then(function(result) {console.log(result)})
          }
     res.status(207).json(answer)
