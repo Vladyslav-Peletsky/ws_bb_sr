@@ -49,23 +49,22 @@ async function unzipSceneFile(sceneid, scenePath) {
                   let sceneReport = JSON.parse(fs.readFileSync('./defaultSceneResult/report.json', 'utf8'))
                   let copy = {};
                   setTimeout(copyScenesResults, 3000); 
+                  
                   function copyScenesResults() {
                       copy = Object.assign(sceneReport, sceneResult);
-                    };
+                      //Update data
+                        copy.documentRecognitionStatusCode = 'RecognizedOk';
+                        copy.metaData.notRecognizePhotosCounter = 0;
+                        copy.report.reportDate = format(Date.now(), 'isoDateTime');
+                        copy.sceneID = sceneid;
                   
-                  //Update data
-                  copy.documentRecognitionStatusCode = 'RecognizedOk';
-                  copy.metaData.notRecognizePhotosCounter = 0;
-                  copy.report.reportDate = format(Date.now(), 'isoDateTime');
-                  copy.sceneID = sceneid;
-
-                  zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
-                 
-                  zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file
-                                  
-                  zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
-                  console.log('recognizedStep_1');
-
+                        zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
+                        
+                        zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file
+                                        
+                        zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
+                        console.log('recognizedStep_1');
+                    };
             resolve('createResulScene: '+sceneid);
             });          
     }
