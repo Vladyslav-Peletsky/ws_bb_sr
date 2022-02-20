@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { format } from 'fecha';
 import md5 from 'md5';
 
-async function unzipSceneFile(sceneid, scenePath) {
+async function unzipSceneFile(sceneID, scenePath) {
     let sceneFolder = process.cwd()+'/scenes/';
     return	new Promise((resolve, reject) => {
         var zip = new AdmZip(scenePath);
@@ -13,8 +13,8 @@ async function unzipSceneFile(sceneid, scenePath) {
                 sceneFolder, 
                 false, 
                 true);
-        fs.rename(sceneFolder+'scene.json', sceneFolder+sceneid+'.json', () => { console.log("\nFile Renamed!\n"); });
-        resolve('unzipSceneFile: '+sceneid);
+        fs.rename(sceneFolder+'scene.json', sceneFolder+sceneID+'.json', () => { console.log("\nFile Renamed!\n"); });
+        resolve('unzipSceneFile: '+sceneID);
             });  
     }
 
@@ -31,20 +31,13 @@ async function unzipSceneFile(sceneid, scenePath) {
     }
 
 
-    async function getSceneFile(sceneid) { // creating archives
+    async function getSceneFile(sceneID) { // creating archives
         return	new Promise((resolve, reject) => {
-                  console.log('recognizedStep_0');
+                  console.log('getSceneFile: ', sceneID);
                   var zip = new AdmZip();
                   // add file directly
-                  let sceneFilePath = './scenes/'+sceneid+'.json';
-                  let resultSceneFilePath = './scenes/result/'+sceneid+'.rec';
-                  let dirResult = './scenes/result';
-                  
-                  if (!fs.existsSync(dirResult)){
-                    fs.mkdirSync(dirResult);
-                  }
-                  //var content = "inner content of the file";
-
+                  let sceneFilePath = './scenes/'+sceneID+'.json';
+                  let resultSceneFilePath = './scenes/result/'+sceneID+'.rec';
                   let sceneResult = {};
                   let sceneReport = {};
                   let copy = {};
@@ -69,7 +62,7 @@ async function unzipSceneFile(sceneid, scenePath) {
                                 copy.documentRecognitionStatusCode = 'RecognizedOk';
                                 copy.metaData.notRecognizePhotosCounter = 0;
                                 copy.report.reportDate = format(Date.now(), 'isoDateTime');
-                                copy.sceneID = sceneid;
+                                copy.sceneID = sceneID;
                                 zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
                                 zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file          
                                 zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
@@ -80,19 +73,19 @@ async function unzipSceneFile(sceneid, scenePath) {
                         .then(() => sceneReportFun().then(function(result) { console.log(result)}))
                         .then(() => copyResults().then(function(result) { console.log(result)}));
                                
-                        resolve('createResulScene: '+sceneid);
+                        resolve('createResulScene: '+sceneID);
             });          
     }
 
-    async function sceneRecognizedUpdateStatus(sceneid) { // creating archives
+    async function sceneRecognizedUpdateStatus(sceneID) { // creating archives
         return	new Promise((resolve, reject) => {
-            let resultSceneFilePath = './scenes/result/'+sceneid+'.rec';
+            let resultSceneFilePath = './scenes/result/'+sceneID+'.rec';
             let buf = fs.readFileSync(resultSceneFilePath)
             let md5hash = md5(buf);
-            sceneRecognized(sceneid, md5hash.toUpperCase())
+            sceneRecognized(sceneID, md5hash.toUpperCase())
             console.log('recognizedStep_2');
             
-        resolve('sceneRecognizedUpdateStatus: '+sceneid);
+        resolve('sceneRecognizedUpdateStatus: '+sceneID);
         });   
     }
 

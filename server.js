@@ -10,8 +10,6 @@ import request from 'request';
 dropTables();
 setTimeout(createTables, 1000); 
 
-
-
 const app = expressWs(express()).app;
 app.set('port', process.env.PORT || 3000);
 app.listen(app.get('port'), () => {
@@ -20,17 +18,14 @@ app.listen(app.get('port'), () => {
 
 let connects = [];
 
-global.currentSceneId;
-global.result = new Uint8Array();
-
 app.ws('/onlinereco', (ws, req) => {
     connects.push(ws);
     let clientId = uuidv4();
-    console.log('Новый пользователь '+clientId);
+    console.log('Новый пользователь: '+clientId);
     newSession (clientId);
 
     ws.on('close', () => {
-        console.log('Пользователь отключился'+clientId);
+        console.log('Пользователь отключился: ', clientId);
         deleteSession (clientId);
             connects = connects.filter(conn => {
             return (conn === ws) ? false : true;
@@ -48,18 +43,17 @@ app.ws('/onlinereco', (ws, req) => {
                                 socket.send(result);
                                 });
                             });
-                        console.log('connection');
+                        console.log('connection. clientId: ', clientId);
                         break;
                     
                     case 'scene':
-                        global.currentSceneId = jsonMessage.data.sceneID;
                         newScene(clientId, jsonMessage.data.sceneID)
                         .then(() => sceneStatuses(clientId)).then(function(result) {
                             connects.forEach(socket => {
                                  socket.send(result);
                                 });
                             });
-                        console.log('newScene');
+                        console.log('newScene, clientId: ',clientId, ' sceneID: ', jsonMessage.data.sceneID);
                         break;
                     
                     case 'finish':
@@ -85,7 +79,7 @@ app.ws('/onlinereco', (ws, req) => {
                                 socket.send(result);
                                });
                         });
-                        console.log('finishNewScene');
+                        console.log('finishNewScene, clientId: ',clientId, ' sceneID: ', jsonMessage.data.sceneID);
                         break;
 
                     case 'status':
@@ -94,7 +88,7 @@ app.ws('/onlinereco', (ws, req) => {
                                 socket.send(result);
                                });
                         });
-                        console.log('status');
+                        console.log('status, clientId: ',clientId);
                         break;
                     
                     case 'delete':
@@ -104,42 +98,42 @@ app.ws('/onlinereco', (ws, req) => {
                                 socket.send(result);
                                });
                             });
-                        console.log('delete');
+                        console.log('delete, clientId: ',clientId);
                         break;
                     default:
-                        console.log('Неизвестная команда '+jsonMessage.type);
+                        console.log('Неизвестная команда '+jsonMessage.type, ' clientId: ',clientId);
                         break;
                 }
             } catch (error) {
-                console.log('Ошибка', error);
+                console.log('Ошибка: ', error);
             }
         
     });
 });
 
 
-app.put('/onlinereco/scene/:sceneid', (req, res) => {
-    let scenePath = process.cwd()+'/scenes/'+req.params.sceneid+'.rec'
+app.put('/onlinereco/scene/:sceneID', (req, res) => {
+    let scenePath = process.cwd()+'/scenes/'+req.params.sceneID+'.rec'
     var writeStream = fs.createWriteStream(scenePath);
-    req.pipe(writeStream);
+        req.pipe(writeStream);
     req.on('end', function () {
     res.send('ok');
     res.end();
     });
   });
  
-  app.get('/onlinereco/scene/:sceneid', (req, res) => {
-        let scenePath = process.cwd()+'/scenes/result/'+req.params.sceneid+'.rec' 
+  app.get('/onlinereco/scene/:sceneID', (req, res) => {
+        let scenePath = process.cwd()+'/scenes/result/'+req.params.sceneID+'.rec' 
         res.download(scenePath);
   });
 
   app.post('/offlinereco', (req, res) => {
-    //const upload = multer({ dest: './scenes/scenesOffline' });
     var busboy = new Busboy({ headers: req.headers });
     let answer = [];
     
     busboy.on('field', (fieldname, file, filename, encoding, mimetype) => { 
-        let sceneIdUpload = JSON.parse(file)[0].sceneID;
+        console.log('field: '+file);
+        let sceneIDUpload = JSON.parse(file)[0].sceneID;
         answer = JSON.parse(file);
         answer[0].responseStatus = 201;
         delete answer[0].fileName;
@@ -151,17 +145,17 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         if (documentRecognitionStatusCode == 'NeedRecognition')
             {
                 sleep(5000).then(function(result) {console.log(result)})
-                .then(() => unzipSceneFile(sceneIdUpload, './scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) {console.log(result)}))
-                .then(() => deleteFile('./scenes/scenesOffline/'+sceneIdUpload+'.rec').then(function(result) { console.log(result)}))
+                .then(() => unzipSceneFile(sceneIDUpload, './scenes/scenesOffline/'+sceneIDUpload+'.rec').then(function(result) {console.log(result)}))
+                .then(() => deleteFile('./scenes/scenesOffline/'+sceneIDUpload+'.rec').then(function(result) { console.log(result)}))
                 .then(() => sleep(6000)).then(function(result) {console.log(result)})
-                .then(() => getSceneFile(sceneIdUpload)).then(function(result) {console.log(result)})
+                .then(() => getSceneFile(sceneIDUpload)).then(function(result) {console.log(result)})
                 .then(() => sleep(4000)).then(function(result) {console.log(result)})
-                .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIdUpload+'.rec', sceneIdUpload)).then(function(result) {console.log(result)})
+                .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIDUpload+'.rec', sceneIDUpload)).then(function(result) {console.log(result)})
             }
 
       });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        console.log(fieldname);
+        console.log('file: '+JSONstringify(fieldname));
         file.pipe(fs.createWriteStream('./scenes/scenesOffline/'+fieldname+'.rec'));
     });
     busboy.on('finish', function() {

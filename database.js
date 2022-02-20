@@ -43,8 +43,7 @@ function newScene(uuid, sceneID) {
   return	new Promise((resolve, reject) => {
       pool.query("INSERT INTO dbo.Scenes (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1 AND NOT EXISTS (SELECT 1 FROM dbo.Scenes WHERE SceneID = $2);",[uuid,sceneID,url], (err, res) => {
           if (err) throw err;
-          console.log('newScene:' + sceneID);
-          console.log(res.rows);
+          console.log('newSceneDB:' + sceneID);
           resolve(JSON.stringify(res.rows));
       });
     });
@@ -54,8 +53,7 @@ function finishNewScene(sceneID, checksum) {
   return	new Promise((resolve, reject) => {  
       pool.query('UPDATE dbo.Scenes SET Processed = 2, Checksum = $2 WHERE SceneID = $1;',[sceneID,checksum], (err, res) => {
           if (err) throw err;
-          console.log('finishNewScene:' + sceneID);
-          console.log(res.rows);
+          console.log('finishNewSceneDB: ' + sceneID);
           resolve(JSON.stringify(res.rows));
       });
     });
@@ -65,8 +63,7 @@ function sceneRecognized(sceneID, checksum) {
   return	new Promise((resolve, reject) => {  
       pool.query('UPDATE dbo.Scenes SET Processed = 3, Checksum = $2 WHERE SceneID = $1;',[sceneID, checksum], (err, res) => {
           if (err) throw err;
-          console.log('sceneRecognized:' + sceneID);
-          console.log(res.rows);
+          console.log('sceneRecognizedDB:' + sceneID);
           resolve(JSON.stringify(res.rows));
       });
     });
@@ -76,8 +73,7 @@ function deleteScene(uuid, sceneID) {
   return	new Promise((resolve, reject) => {  
       pool.query('UPDATE dbo.Scenes SET isActive = 0 WHERE SceneID = $1;',[sceneID], (err, res) => {
           if (err) throw err;
-          console.log('deleteScene:' + sceneID);
-          console.log(res.rows);
+          console.log('deleteSceneDB:' + sceneID);
           resolve(JSON.stringify(res.rows));
       });
     });
@@ -87,7 +83,7 @@ function sceneStatuses(uuid) {
   return new Promise(resolve => {
     pool.query("SELECT s.SceneID, s.Processed, Checksum, TRIM(PutUrl) AS PutUrl, TRIM(GetUrl) AS GetUrl FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1 AND s.isActive =1;",[uuid], (err, res) => {
         if (err) throw err;
-        console.log('sceneStatuses _ uuid :' + uuid);
+        console.log('sceneStatuses. clientId :' + uuid);
         let sceneStatuses = {"type":"sceneStatuses"};
         sceneStatuses.data = res.rows;
         let result = JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID');
@@ -101,17 +97,15 @@ function sceneStatuses(uuid) {
 }
 
 
-
 function dropTables() {
-  pool.query("DROP TABLE IF EXISTS dbo.Scenes", (err, res) => {
-      if (err) throw err;
-      console.log('Таблица сцен удалена');
-    });
-  pool.query("DROP TABLE IF EXISTS dbo.ClientSessions", (err, res) => {
-      if (err) throw err;
-      console.log('Таблица сессий удалена');
-    });
-
+    pool.query("DROP TABLE IF EXISTS dbo.Scenes", (err, res) => {
+        if (err) throw err;
+        console.log('Таблица сцен удалена');
+      });
+    pool.query("DROP TABLE IF EXISTS dbo.ClientSessions", (err, res) => {
+        if (err) throw err;
+        console.log('Таблица сессий удалена');
+      });
 }
 
 function createTables() {
