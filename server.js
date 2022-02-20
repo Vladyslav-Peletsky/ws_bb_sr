@@ -164,7 +164,7 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
         console.log(fieldname);
         file.pipe(fs.createWriteStream('./scenes/scenesOffline/'+fieldname+'.rec'));
     });
-    busboy.on('close', function() {
+    busboy.on('finish', function() {
       console.log('Upload complete');
       res.setHeader("Content-Type", "application/json");
       res.status(207).json(answer);
@@ -172,8 +172,6 @@ app.put('/onlinereco/scene/:sceneid', (req, res) => {
     });
     return req.pipe(busboy);
   }); 
- 
-
 
   //таймаут
      async function sleep(timeout) {
