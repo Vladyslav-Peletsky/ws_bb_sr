@@ -63,6 +63,8 @@ async function unzipSceneFile(sceneid, scenePath) {
                         }
                         function copyResults() {
                             return new Promise(function(resolve){
+                                console.log(sceneReport);
+                                console.log(sceneResult);
                                 copy = Object.assign(sceneReport, sceneResult);
                                 //Update data
                                 copy.documentRecognitionStatusCode = 'RecognizedOk';
