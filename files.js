@@ -66,11 +66,15 @@ async function unzipSceneFile(sceneid, scenePath) {
                                 console.log(sceneReport);
                                 console.log(sceneResult);
                                 copy = Object.assign(sceneReport, sceneResult);
+                                console.log(copy);
                                 //Update data
                                 copy.documentRecognitionStatusCode = 'RecognizedOk';
                                 copy.metaData.notRecognizePhotosCounter = 0;
                                 copy.report.reportDate = format(Date.now(), 'isoDateTime');
                                 copy.sceneID = sceneid;
+
+                                console.log(copy);
+                                
                                 zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
                                 zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file          
                                 zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
