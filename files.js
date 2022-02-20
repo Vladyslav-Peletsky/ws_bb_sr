@@ -58,6 +58,7 @@ async function unzipSceneFile(sceneid, scenePath) {
                         function sceneReportFun() {
                             return new Promise(function(resolve){
                                 sceneReport = JSON.parse(fs.readFileSync('./defaultSceneResult/report.json', 'utf8'));
+                                delete sceneReport.report;
                                 resolve('sceneReport');
                             });
                         }
@@ -74,7 +75,7 @@ async function unzipSceneFile(sceneid, scenePath) {
                                 copy.sceneID = sceneid;
 
                                 console.log(copy);
-                                
+
                                 zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
                                 zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file          
                                 zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
