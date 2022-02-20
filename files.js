@@ -52,47 +52,34 @@ async function unzipSceneFile(sceneid, scenePath) {
                         function sceneResultFun(sceneFilePath) {
                             return new Promise(function(resolve){
                                 sceneResult = JSON.parse(fs.readFileSync(sceneFilePath, 'utf8'));
+                                delete sceneResult.report;
                                 resolve('sceneResultFun');
                             });
                         };
                         function sceneReportFun() {
                             return new Promise(function(resolve){
-                                sceneReport = JSON.parse(fs.readFileSync('./defaultSceneResult/report.json', 'utf8'));
-                                delete sceneReport.report;
+                                sceneReport = JSON.parse(fs.readFileSync('./defaultSceneResult/report.json', 'utf8'));                            
                                 resolve('sceneReport');
                             });
                         }
                         function copyResults() {
                             return new Promise(function(resolve){
-                                console.log(sceneReport);
-                                console.log(sceneResult);
                                 copy = Object.assign(sceneReport, sceneResult);
-                                console.log(copy);
                                 //Update data
                                 copy.documentRecognitionStatusCode = 'RecognizedOk';
                                 copy.metaData.notRecognizePhotosCounter = 0;
                                 copy.report.reportDate = format(Date.now(), 'isoDateTime');
                                 copy.sceneID = sceneid;
-
-                                console.log(copy);
-
                                 zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
                                 zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file          
                                 zip.writeZip(/*target file name*/ resultSceneFilePath);  // or write everything to disk
-                                resolve('zipResults-recognizedStep_1');
-
-                                resolve('copy');
-                            });
+                                resolve('zipResults-recognizedStep_1');                            });
                         }
          
                         sceneResultFun(sceneFilePath).then(function(result) {console.log(result)})
                         .then(() => sceneReportFun().then(function(result) { console.log(result)}))
                         .then(() => copyResults().then(function(result) { console.log(result)}));
-                        /* f1()
-                        .then(function() {return f2();})
-                        .then(function() {return f3();})
-                        .then(function() {console.log('Done!');}); */
-            
+                               
                         resolve('createResulScene: '+sceneid);
             });          
     }
