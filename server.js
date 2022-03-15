@@ -320,8 +320,8 @@ app.post('/offlinereco', (req, res) => {
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
         file.pipe(fs.createWriteStream('./scenes/scenesOffline/'+fieldname+'.rec'));
     });
-    busboy.on('finish', function() {
-      addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"offlineRec", "data":sceneIDUpload})
+    busboy.on('finish', function(fieldname) {
+      addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"offlineRec", "data":fieldname})
       res.setHeader("Content-Type", "application/json");
       res.status(207).json(answer);
       res.end();
