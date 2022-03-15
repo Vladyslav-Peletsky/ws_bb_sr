@@ -81,6 +81,11 @@ let table;
     };
   
 
+    // Listen for possible errors
+    socket.addEventListener('error', function (event) {
+        console.log('WebSocket error: ', event);
+    });
+
 
     $('#tableDestroy').on( 'click', function () {
         table.destroy();
