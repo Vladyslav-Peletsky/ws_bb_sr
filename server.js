@@ -372,7 +372,9 @@ async function addLogs(log, send = true) {
             dbAddLog(log)
             .then(() => {
                 if(send) {
+                    console.log('send partial LOG');
                     siteConnects.forEach(socket => {
+                        console.log(socket);
                         socket.send( JSON.stringify({type:"partialLogs", data:[log]}) );
                         });
                     }
