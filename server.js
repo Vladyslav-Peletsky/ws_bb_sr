@@ -374,7 +374,7 @@ async function addLogs(log, send = true) {
                 if(send) {
                     console.log('send partial LOG');
                     siteConnects.forEach(socket => {
-                        console.log(socket);
+                        console.log('send partial LOG to CLIENT');
                         socket.send( JSON.stringify({type:"partialLogs", data:[log]}) );
                         });
                     }
