@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - dataTable Add row</title>
+  
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="https://nightly.datatables.net/js/jquery.dataTables.js"></script>
+  <script src="https://editor.datatables.net/extensions/Editor/js/dataTables.editor.min.js"></script>
+  <script  src="./script.js"></script>
+ 
+  <link href="https://editor.datatables.net/extensions/Editor/css/editor.dataTables.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://nightly.datatables.net/css/jquery.dataTables.css" rel="stylesheet" type="text/css" />
+  
+  <style>
+    table#example.dataTable tbody tr.Highlight > .sorting_1 {
+    background-color: #ffa;
+    }
+    table#example.dataTable tbody tr.Highlight {
+        background-color: #ffa;
+    }
+    .connectionOn {
+      color:green;
+    }
+    .connectionOff {
+      color:red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>      
+      <span style="font-size: 20px; font-weight: 600; display: block; margin: 10px" id="statusConnection"></span>
+
+      <span><button id="tableDestroy">REFRESH TABLE</button></span>
+    </header>
+  </div>
+  
+  <table id="example" class="display nowrap" width="100%"></table>
+
+</body>
+</html>

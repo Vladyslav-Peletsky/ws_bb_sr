@@ -9,120 +9,113 @@ const pool = new Pool({
   }
 });
 
-
-function newSession(uuid) {
+function newSession(sessionId) {
   return	new Promise((resolve, reject) => {
-    pool.query('INSERT INTO dbo.ClientSessions (Session, isActive, CreateDate, UpdatedDate) VALUES ($1,1,to_timestamp($2 / 1000.0),to_timestamp($2 / 1000.0));',[uuid,Date.now()], (err, res) => {
-        if (err) throw err;
-        resolve(JSON.stringify(res.rows));
+    pool.query('INSERT INTO dbo.ClientSessions (SessionID, isActive, CreateDate, UpdatedDate) VALUES ($1,1,to_timestamp($2 / 1000.0),to_timestamp($2 / 1000.0));',[sessionId,Date.now()], (err, res) => {
+        if (err) return reject( {type:"newSession", data:err.toString()} );
+        return resolve(JSON.stringify(res.rows));
       });
     });
 }
 
-function updateSession(uuid, jsonMessage) {
+function updateSession(sessionId, jsonMessage) {
   return	new Promise((resolve, reject) => {
-     pool.query('UPDATE dbo.ClientSessions SET DistributorID =$3,  VisitID = $4, DocumentID = $5, CustomerID =$6, EmployeeID =$7, Custom =$8, UpdatedDate = to_timestamp($2 / 1000.0) WHERE Session = $1;',[uuid, Date.now(), jsonMessage.data.distributorID, jsonMessage.data.visitID, jsonMessage.data.documentID, jsonMessage.data.customerID, jsonMessage.data.employeeID, jsonMessage.data.custom], (err, res) => {
-        if (err) throw err;
-        console.log(res.rows);
-        resolve(JSON.stringify(res.rows));
+    pool.query('UPDATE dbo.ClientSessions SET DistributorID =$3,  VisitID = $4, DocumentID = $5, CustomerID =$6, EmployeeID =$7, Custom =$8, UpdatedDate = to_timestamp($2 / 1000.0) WHERE SessionID = $1;',[sessionId, Date.now(), jsonMessage.data.distributorID, jsonMessage.data.visitID, jsonMessage.data.documentID, jsonMessage.data.customerID, jsonMessage.data.employeeID, jsonMessage.data.custom], (err, res) => {
+        if (err) return reject( {type:"updateSession", data:err.toString()} );
+        return resolve(JSON.stringify(res.rows));
     });
   });
 }
 
-function deleteSession(uuid) {
+function deleteSession(sessionId) {
   return	new Promise((resolve, reject) => {
-    pool.query('UPDATE dbo.ClientSessions SET isActive = 0, UpdatedDate = to_timestamp($2 / 1000.0) WHERE Session = $1;',[uuid,Date.now()], (err, res) => {
-        if (err) throw err;
-        resolve(JSON.stringify(res.rows));
+    pool.query('UPDATE dbo.ClientSessions SET isActive = 0, UpdatedDate = to_timestamp($2 / 1000.0) WHERE SessionID = $1;',[sessionId,Date.now()], (err, res) => {
+        if (err) return reject( {type:"deleteSession", data:err.toString()} );
+        return resolve(JSON.stringify(res.rows));
       });
     });
 }
 
-function newScene(uuid, sceneID) {
-  let url = 'https://ws-bb-sr.herokuapp.com/onlinereco/scene/'+sceneID;
+function newScene(sessionId, sceneId) {
+  let url = 'https://ws-bb-sr.herokuapp.com/onlinereco/scene/'+sceneId;
   return	new Promise((resolve, reject) => {
-      pool.query("INSERT INTO dbo.Scenes (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE Session = $1 AND NOT EXISTS (SELECT 1 FROM dbo.Scenes WHERE SceneID = $2);",[uuid,sceneID,url], (err, res) => {
-          if (err) throw err;
-          console.log('newSceneDB:' + sceneID);
-          resolve(JSON.stringify(res.rows));
+      pool.query("INSERT INTO dbo.Scenes (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE SessionID = $1"+
+                 "ON CONFLICT (SceneID) " +
+                 "DO " +
+                 "UPDATE SET (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) = (SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE SessionID = $1);",[sessionId,sceneId,url], (err, res) => {
+          if (err) return reject( {type:"newScene", data:err.toString()} );
+          return resolve(JSON.stringify(res.rows));
       });
     });
 }
 
-function finishNewScene(sceneID, checksum) {
+function finishNewScene(sceneId, checksum) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET Processed = 2, Checksum = $2 WHERE SceneID = $1;',[sceneID,checksum], (err, res) => {
-          if (err) throw err;
-          console.log('finishNewSceneDB: ' + sceneID);
-          resolve(JSON.stringify(res.rows));
+      pool.query('UPDATE dbo.Scenes SET Processed = 2, Checksum = $2 WHERE SceneID = $1;',[sceneId,checksum], (err, res) => {
+          if (err) return reject( {type:"finishNewScene", data:err.toString()} );
+          return resolve(JSON.stringify(res.rows));
       });
     });
 }
 
-function sceneRecognized(sceneID, checksum) {
+function sceneRecognized(sceneId, checksum) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET Processed = 3, Checksum = $2 WHERE SceneID = $1;',[sceneID, checksum], (err, res) => {
-          if (err) throw err;
-          console.log('sceneRecognizedDB:' + sceneID);
-          resolve(JSON.stringify(res.rows));
+      pool.query('UPDATE dbo.Scenes SET Processed = 3, Checksum = $2 WHERE SceneID = $1;',[sceneId, checksum], (err, res) => {
+          if (err) return reject( {type:"sceneRecognized", data:err.toString()} );
+          return resolve(JSON.stringify(res.rows));
       });
     });
 }
 
-function deleteScene(uuid, sceneID) {
+function deleteScene(sessionId, sceneId) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET isActive = 0 WHERE SceneID = $1;',[sceneID], (err, res) => {
-          if (err) throw err;
-          console.log('deleteSceneDB:' + sceneID);
+      pool.query('UPDATE dbo.Scenes SET isActive = 0 WHERE SceneID = $1;',[sceneId], (err, res) => {
+          if (err) return reject( {type:"deleteScene", data:err.toString()} );
           resolve(JSON.stringify(res.rows));
       });
     });
 }
 
-function sceneStatuses(uuid) {
-  return new Promise(resolve => {
-    pool.query("SELECT s.SceneID, s.Processed, Checksum, TRIM(PutUrl) AS PutUrl, TRIM(GetUrl) AS GetUrl FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.Session = $1 AND s.isActive =1;",[uuid], (err, res) => {
-        if (err) throw err;
-        console.log('sceneStatuses. clientId :' + uuid);
-        let sceneStatuses = {"type":"sceneStatuses"};
-        sceneStatuses.data = res.rows;
-        let result = JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID');
-          result = result.replace(/puturl/g, 'putUrl');
-          result = result.replace(/geturl/g, 'getUrl');
-        console.log(result);
-        resolve(result);
-    });
-    
+function sceneStatuses(sessionId) {
+  return new Promise((resolve, reject) => {
+      pool.query("SELECT s.SceneID, s.Processed, Checksum, TRIM(PutUrl) AS PutUrl, TRIM(GetUrl) AS GetUrl FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.SessionID = $1 AND s.isActive =1;",[sessionId], (err, res) => {
+          if (err) return reject( {type:"sceneStatuses", data:err.toString()} );
+          let sceneStatuses = {"type":"sceneStatuses"};
+          sceneStatuses.data = res.rows;
+          let result = JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID');
+            result = result.replace(/puturl/g, 'putUrl');
+            result = result.replace(/geturl/g, 'getUrl');
+          return resolve(result);
+      });
   });
 }
 
-
-function dropTables() {
-    pool.query("DROP TABLE IF EXISTS dbo.Scenes", (err, res) => {
-        if (err) throw err;
-        console.log('Таблица сцен удалена');
+function dbAddLog(log) {
+  return	new Promise((resolve, reject) => {  
+      pool.query('INSERT INTO dbo.Logs (TheDate, Status, MessageFrom, Action, Data) VALUES ($1, $2, $3, $4, $5);',[log.thedate, log.status, log.messagefrom, log.action, log.data], (err, res) => {
+          if (err) return reject( {type:"dbAddLog", data:err.toString()} );
+          return resolve(JSON.stringify(res.rows));
       });
-    pool.query("DROP TABLE IF EXISTS dbo.ClientSessions", (err, res) => {
-        if (err) throw err;
-        console.log('Таблица сессий удалена');
-      });
-}
+    });
+};
 
-function createTables() {
-    pool.query("CREATE SCHEMA IF NOT EXISTS dbo", (err, res) => {
-        if (err) throw err;
-        console.log('Схема создана');
+function getAllLogs(log) {
+  return	new Promise((resolve, reject) => {  
+      pool.query('SELECT TheDate, Status, MessageFrom, Action, Data FROM dbo.Logs;', (err, res) => {
+          if (err) return reject( {type:"getAllLogs", data:err.toString()} );
+          return resolve(JSON.stringify(res.rows));
       });
-    pool.query("CREATE TABLE IF NOT EXISTS dbo.Scenes (SceneID uuid NOT NULL, Processed integer NOT NULL, PutUrl character(200), GetUrl character(200), Checksum character(32) NULL, isActive int NOT NULL, DistributorID character(50) NOT NULL, VisitID character(50) NOT NULL, DocumentID character(50) NOT NULL, CustomerID character(50) NOT NULL, EmployeeID character(50) NOT NULL, Custom character(5000) NULL)", (err, res) => {
-        if (err) throw err;
-        console.log('Таблица сцен создана');
+    });
+};
+
+function queryScript(sqlScript) {
+  return	new Promise((resolve, reject) => {  
+      pool.query(sqlScript.script, (err, res) => {
+          if (err) return reject( {type:"queryScript", data:err.toString()} )
+          return resolve(sqlScript.desc, JSON.stringify(res.rows));
       });
-    pool.query("CREATE TABLE IF NOT EXISTS dbo.ClientSessions (Session uuid NOT NULL, isActive integer, DistributorID character(50) NULL, VisitID character(50) NULL, DocumentID character(50) NULL, CustomerID character(50) NULL, EmployeeID character(50) NULL, Custom character(5000) NULL, CreateDate timestamp without time zone NOT NULL, UpdatedDate timestamp without time zone NOT NULL)", (err, res) => {
-        if (err) throw err;
-        console.log('Таблица сессий создана');
-      });
-}
+    });
+};
 
 
-
-export {dropTables, createTables, newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, deleteScene, sceneStatuses};
+export {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, deleteScene, sceneStatuses, queryScript, dbAddLog, getAllLogs};

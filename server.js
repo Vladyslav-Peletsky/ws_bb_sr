@@ -1,4 +1,4 @@
-import {createTables,dropTables, newSession, updateSession, deleteSession, newScene, finishNewScene, deleteScene, sceneStatuses} from './database.js';
+import {newSession, updateSession, deleteSession, newScene, finishNewScene, deleteScene, sceneStatuses, queryScript, dbAddLog, getAllLogs} from './database.js';
 import {unzipSceneFile, deleteFile, getSceneFile, sceneRecognizedUpdateStatus} from './files.js';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
@@ -6,9 +6,37 @@ import express from 'express';
 import expressWs from 'express-ws';
 import Busboy from 'busboy';
 import request from 'request';
+import { format } from 'fecha';
+import dateFormat, { masks } from "dateformat";
 
-dropTables();
-setTimeout(createTables, 1000); 
+//Инициализация базы (удаление и создание таблиц)
+let dbScripts = {
+    dropLogsTable:{"script":"DROP TABLE IF EXISTS dbo.Logs", "desc":"Таблица Logs удалена"},
+    dropScenesTable:{"script":"DROP TABLE IF EXISTS dbo.Scenes", "desc":"Таблица Scenes удалена"},
+    dropClientSessionsTable:{"script":"DROP TABLE IF EXISTS dbo.ClientSessions", "desc":"Таблица ClientSessions удалена"},
+    createSchema:{"script":"CREATE SCHEMA IF NOT EXISTS dbo", "desc":"Создана схема dbo"},
+    createLogTable:{"script":"CREATE TABLE IF NOT EXISTS dbo.Logs (Id serial primary key, TheDate text NULL, SessionID uuid NULL, Status text NULL, MessageFrom text, Action text, Data text)", "desc":"Создана таблица Logs"},
+    createScenesTable:{"script":"CREATE TABLE IF NOT EXISTS dbo.Scenes (SceneID uuid UNIQUE NOT NULL, Processed integer NOT NULL, PutUrl character(200), GetUrl character(200), Checksum character(32) NULL, isActive int NOT NULL, DistributorID character(50) NOT NULL, VisitID character(50) NOT NULL, DocumentID character(50) NOT NULL, CustomerID character(50) NOT NULL, EmployeeID character(50) NOT NULL, Custom character(5000) NULL)", "desc":"Создана таблица Scenes"},
+    createClientSessionsTable:{"script":"CREATE TABLE IF NOT EXISTS dbo.ClientSessions (SessionID uuid NOT NULL, isActive integer, DistributorID character(50) NULL, VisitID character(50) NULL, DocumentID character(50) NULL, CustomerID character(50) NULL, EmployeeID character(50) NULL, Custom character(5000) NULL, CreateDate timestamp without time zone NOT NULL, UpdatedDate timestamp without time zone NOT NULL)", "desc":"Создана таблица ClientSessions"}
+  };
+  queryScript(dbScripts.dropLogsTable)
+  .then(() => queryScript(dbScripts.dropScenesTable))
+  .then(() => queryScript(dbScripts.dropClientSessionsTable))
+  .then(() => queryScript(dbScripts.createSchema))
+  .then(() => queryScript(dbScripts.createLogTable))
+  .then(() => queryScript(dbScripts.createScenesTable))
+  .then(() => queryScript(dbScripts.createClientSessionsTable))
+  .then(() => addLogs({"thedate":getNowDate(), "sessionId":"", "status":"GOOD", "messagefrom":"internal_server", "action":"Init DB", "data":"Successful"}, false))
+  .catch(function(err){ 
+      try {
+          addLogs({"thedate":getNowDate(), "sessionId":"", "status":"ERROR", "messagefrom":"internal_server", "action":"Init DB", "data":err.toString()}, false)
+        } 
+        catch(err) {
+            console.log(err.toString())
+        } 
+        });
+  //Инициализация базы (удаление и создание таблиц)
+  
 
 const app = expressWs(express()).app;
 app.set('port', process.env.PORT || 3000);
@@ -17,17 +45,203 @@ app.listen(app.get('port'), () => {
 });
 
 let connects = [];
+let siteConnects = [];
+
+
+// ws.send(result); - отправка ответного сообщения клиенту
+
+/* отправка сообщения всем подключенным клиентам
+connects.forEach(socket => {
+    socket.send(result);
+    });
+*/ 
+/* пример фильтрации клиентов которым необходимо отправить сообщение
+connects.filter(conn => {
+    return (conn.clientId === clientId) ? true : false;
+    }).forEach(socket => {
+    socket.send(result);
+    });
+*/
+
 
 app.ws('/onlinereco', (ws, req) => {
+    let sessionId = uuidv4();
+    ws.sessionId = sessionId;
     connects.push(ws);
-    let clientId = uuidv4();
-    console.log('Новый пользователь: '+clientId);
-    newSession (clientId);
+    
+    newSession(sessionId)
+    .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"internal_server", "action":"NewConnection", "data":"Successful"}))
+    .catch(function(err){
+        try {
+            addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"internal_server", "action":"NewConnection", "data":err.toString()})
+          } 
+          catch(err) {
+              console.log(err.toString())
+          }
+        ws.send(getError(err, 'newConnection'));
+        ws.close();
+    });
+
 
     ws.on('close', () => {
-        console.log('Пользователь отключился: ', clientId);
-        deleteSession (clientId);
-            connects = connects.filter(conn => {
+        connects = connects.filter(conn => {
+            return (conn === ws) ? false : true;
+            });
+         
+        deleteSession (sessionId)
+        .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"internal_server", "action":"CloseConnection", "data":""}))
+        .catch(function(err){
+            try {
+                addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"internal_server", "action":"CloseConnection", "data":err.toString()})
+              } 
+              catch(err) {
+                  console.log(err.toString())
+              }
+            ws.close();
+        });
+      });
+
+    ws.on('message', message => {
+        try {
+                const jsonMessage = JSON.parse(message);
+                switch (jsonMessage.type) {
+                    case 'connection':
+                        addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"connection", "data":JSON.stringify(jsonMessage)})
+                        .then(() => updateSession(sessionId, jsonMessage))
+                        .then(() => sceneStatuses(sessionId))
+                        .then(function(result) {
+                                addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})
+                                ws.send(result);
+                            })
+                        .catch(function(err){
+                                try {
+                                    addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"server", "action":"connection", "data":JSON.stringify(err.data)})
+                                } 
+                                catch(err) {
+                                    console.log(JSON.stringify(err.data));
+                                }
+                                    ws.send(getError(err, 'connection'));
+                                    ws.close();
+                            });
+                        
+                        break;
+                    
+                    case 'scene':
+                        addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"scene", "data":JSON.stringify(jsonMessage)})
+                        .then(() => newScene(sessionId, jsonMessage.data.sceneID))
+                        .then(() => sceneStatuses(sessionId))
+                        .then(function(result) {
+                                addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})
+                                ws.send(result);
+                                })
+                        .catch(function(err){
+                                try {
+                                    addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"server", "action":"scene", "data":JSON.stringify(err.data)})
+                                } 
+                                catch(err) {
+                                    console.log(JSON.stringify(err.data));
+                                }
+                                    ws.send(getError(err, 'scene'));
+                                    ws.close();
+                                });
+                        
+                        break;
+                    
+                    case 'finish':
+                        let scenePath = process.cwd()+'/scenes/'+jsonMessage.data.sceneID+'.rec';
+                        let sceneJsonPath = process.cwd()+'/scenes/'+jsonMessage.data.sceneID+'.json';
+
+                        addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"finish", "data":JSON.stringify(jsonMessage)})    
+                        .then(() => unzipSceneFile(jsonMessage.data.sceneID, scenePath))
+                        .then(() => deleteFile(scenePath))
+                        .then(() => finishNewScene(jsonMessage.data.sceneID, jsonMessage.data.checksum))
+                        .then(() => sceneStatuses(sessionId)
+                        .then(function(result) {
+                            addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})     
+                            ws.send(result);
+                            }))
+                        .then(() => getSceneFile(jsonMessage.data.sceneID))
+                        .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID))
+                        .then(() => deleteFile(sceneJsonPath))
+                        .then(() => sleep(8000))
+                        .then(() => sceneStatuses(sessionId)
+                        .then(function(result) {
+                            addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})     
+                            ws.send(result);
+                            }))
+                        .catch(function(err){
+                            try {
+                                addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"server", "action":"finish", "data":JSON.stringify(err.data)})
+                            } 
+                            catch(err) {
+                                console.log(JSON.stringify(err.data));
+                            }
+                                ws.send(getError(err, 'finish'));
+                                ws.close();
+                            });
+
+                        break;
+
+                    case 'status':
+                    addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"status", "data":JSON.stringify(jsonMessage)})    
+                    .then(() => sceneStatuses(sessionId)
+                    .then(function(result) {
+                        addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})     
+                        ws.send(result);
+                        }))
+                    .catch(function(err){
+                        try {
+                            addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"server", "action":"status", "data":JSON.stringify(err.data)})
+                        } 
+                        catch(err) {
+                            console.log(JSON.stringify(err.data));
+                        }
+                            ws.send(getError(err, 'status'));
+                            ws.close();
+                        });
+                        break;
+                    
+                    case 'delete':
+                        addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"delete", "data":JSON.stringify(jsonMessage)}) 
+                        .then(() => deleteScene(sessionId, jsonMessage.data.sceneID))
+                        .then(() => sceneStatuses(sessionId)
+                        .then(function(result) {
+                            addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})     
+                            ws.send(result);
+                            }))
+                        .catch(function(err){
+                            try {
+                                addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"server", "action":"delete", "data":JSON.stringify(err.data)})
+                            } 
+                            catch(err) {
+                                console.log(JSON.stringify(err.data));
+                            }
+                                ws.send(getError(err, 'status'));
+                                ws.close();
+                            });
+
+                        break;
+                    default:
+                        addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"server", "action":jsonMessage.type, "data":JSON.stringify(jsonMessage)})
+
+                        break;
+                }
+            } catch (error) {
+                addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"server", "action":jsonMessage.type, "data":JSON.stringify(err.data)})
+            }
+        
+
+
+    });
+});
+
+app.ws('/getLogs', (ws, req) => {
+    let siteSessionId = uuidv4();
+    ws.siteSessionId = siteSessionId;
+    siteConnects.push(ws);
+
+    ws.on('close', () => {
+        siteConnects = siteConnects.filter(conn => {
             return (conn === ws) ? false : true;
             });
       });
@@ -36,80 +250,23 @@ app.ws('/onlinereco', (ws, req) => {
         try {
                 const jsonMessage = JSON.parse(message);
                 switch (jsonMessage.type) {
-                    case 'connection':
-                        updateSession(clientId, jsonMessage)
-                        .then(() => sceneStatuses(clientId)).then(function(result) {
-                            connects.forEach(socket => {
-                                socket.send(result);
-                                });
-                            });
-                        console.log('connection. clientId: ', clientId);
-                        break;
-                    
-                    case 'scene':
-                        newScene(clientId, jsonMessage.data.sceneID)
-                        .then(() => sceneStatuses(clientId)).then(function(result) {
-                            connects.forEach(socket => {
-                                 socket.send(result);
-                                });
-                            });
-                        console.log('newScene, clientId: ',clientId, ' sceneID: ', jsonMessage.data.sceneID);
-                        break;
-                    
-                    case 'finish':
-                        let scenePath = process.cwd()+'/scenes/'+jsonMessage.data.sceneID+'.rec';
-                        let sceneJsonPath = process.cwd()+'/scenes/'+jsonMessage.data.sceneID+'.json';
-                        unzipSceneFile(jsonMessage.data.sceneID, scenePath).then(function(result) {console.log(result)})
-                        .then(() => deleteFile(scenePath).then(function(result) { console.log(result)}))
-                        .then(() => finishNewScene(jsonMessage.data.sceneID, jsonMessage.data.checksum).then(function(result) { console.log(result)}))
-                        .then(() => sceneStatuses(clientId)).then(function(result) {
-                            connects.forEach(socket => {
-                                socket.send(result);
-                               });
-                        })
-                        .then(() => sleep(2000)).then(function(result) {console.log(result)})
-                        .then(() => getSceneFile(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
-                        .then(() => sleep(4000)).then(function(result) {console.log(result)})
-                        .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID)).then(function(result) {console.log(result)})
-                        .then(() => sleep(6000)).then(function(result) {console.log(result)})
-                        .then(() => deleteFile(sceneJsonPath).then(function(result) { console.log(result)}))
-                        .then(() => sleep(8000)).then(function(result) {console.log(result)})
-                        .then(() => sceneStatuses(clientId)).then(function(result) {
-                            connects.forEach(socket => {
-                                socket.send(result);
-                               });
-                        });
-                        console.log('finishNewScene, clientId: ',clientId, ' sceneID: ', jsonMessage.data.sceneID);
-                        break;
+                    case 'getAllLogs':
 
-                    case 'status':
-                        sceneStatuses(clientId).then(function(result) {
-                            connects.forEach(socket => {
-                                socket.send(result);
-                               });
-                        });
-                        console.log('status, clientId: ',clientId);
-                        break;
-                    
-                    case 'delete':
-                        deleteScene(clientId, jsonMessage.data.sceneID)
-                        .then(() => sceneStatuses(clientId)).then(function(result) {
-                            connects.forEach(socket => {
-                                socket.send(result);
-                               });
-                            });
-                        console.log('delete, clientId: ',clientId);
-                        break;
+                        getAllLogs().then( function(result) {
+                            ws.send( JSON.stringify({type:"allLogs", data:JSON.parse(result)}) );
+                        })
+
+                    break;
+                     
                     default:
-                        console.log('Неизвестная команда '+jsonMessage.type, ' clientId: ',clientId);
-                        break;
+                        ws.send('{"type":"Неизвестная команда от Клиента"}');
+                    break;
                 }
             } catch (error) {
-                console.log('Ошибка: ', error);
+                ws.send('{"type":"ERROR"}');
             }
-        
     });
-});
+  });
 
 
 app.put('/onlinereco/scene/:sceneID', (req, res) => {
@@ -122,12 +279,18 @@ app.put('/onlinereco/scene/:sceneID', (req, res) => {
     });
   });
  
-  app.get('/onlinereco/scene/:sceneID', (req, res) => {
-        let scenePath = process.cwd()+'/scenes/result/'+req.params.sceneID+'.rec' 
-        res.download(scenePath);
+app.get('/onlinereco/scene/:sceneID', (req, res) => {
+    let scenePath = process.cwd()+'/scenes/result/'+req.params.sceneID+'.rec' 
+    res.download(scenePath);
   });
 
-  app.post('/offlinereco', (req, res) => {
+app.get('/logs',(req,res) => {
+    app.use(express.static(process.cwd()+'/public')); 
+    res.status(200);
+    res.sendFile(process.cwd()+'/public/index.html');
+  });
+
+app.post('/offlinereco', (req, res) => {
     var busboy = new Busboy({ headers: req.headers });
     let answer = [];
     
@@ -145,17 +308,18 @@ app.put('/onlinereco/scene/:sceneID', (req, res) => {
         if (documentRecognitionStatusCode == 'NeedRecognition')
             {
                 sleep(5000).then(function(result) {console.log(result)})
-                .then(() => unzipSceneFile(sceneIDUpload, './scenes/scenesOffline/'+sceneIDUpload+'.rec').then(function(result) {console.log(result)}))
-                .then(() => deleteFile('./scenes/scenesOffline/'+sceneIDUpload+'.rec').then(function(result) { console.log(result)}))
-                .then(() => sleep(6000)).then(function(result) {console.log(result)})
-                .then(() => getSceneFile(sceneIDUpload)).then(function(result) {console.log(result)})
-                .then(() => sleep(4000)).then(function(result) {console.log(result)})
-                .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIDUpload+'.rec', sceneIDUpload)).then(function(result) {console.log(result)})
+                .then(() => unzipSceneFile(sceneIDUpload, './scenes/scenesOffline/'+sceneIDUpload+'.rec'))
+                .then(() => deleteFile('./scenes/scenesOffline/'+sceneIDUpload+'.rec'))
+                .then(() => getSceneFile(sceneIDUpload))
+                .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIDUpload+'.rec', sceneIDUpload))
+                .catch(function(err){
+                    console.log(err);
+                });
             }
 
       });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        console.log('file: '+JSONstringify(fieldname));
+        console.log('file: '+JSON.stringify(fieldname));
         file.pipe(fs.createWriteStream('./scenes/scenesOffline/'+fieldname+'.rec'));
     });
     busboy.on('finish', function() {
@@ -167,38 +331,71 @@ app.put('/onlinereco/scene/:sceneID', (req, res) => {
     return req.pipe(busboy);
   }); 
 
-  //таймаут
-     async function sleep(timeout) {
-        return	new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('Inside test await');
-            }, timeout);
-        });
-    };
+async function sleep(timeout) {
+    return	new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('Inside test await');
+        }, timeout);
+    });
+  };
 
-     async function sendPostResult (url, scenes, resultFilePath, sceneID) {
-        delete scenes[0].responseStatus;
-        scenes[0].fileName = sceneID+'.rec';
+async function sendPostResult (url, scenes, resultFilePath, sceneID) {
+    delete scenes[0].responseStatus;
+    scenes[0].fileName = sceneID+'.rec';
 
-        return	new Promise((resolve, reject) => {
-            var formData = {
-                'scenes': JSON.stringify(scenes),
-                [sceneID]: fs.createReadStream(resultFilePath)
-            };
-            var uploadOptions = {
-                "url": url,
-                "method": "POST",
-                "headers": {
-                    "Token": "8CEB1B0C-1FEB-48EA-8F96-BB4DDBBB06D9"
-                },
-                "formData": formData
+    return	new Promise((resolve, reject) => {
+        var formData = {
+            'scenes': JSON.stringify(scenes),
+            [sceneID]: fs.createReadStream(resultFilePath)
+        };
+        var uploadOptions = {
+            "url": url,
+            "method": "POST",
+            "headers": {
+                "Token": "8CEB1B0C-1FEB-48EA-8F96-BB4DDBBB06D9"
+            },
+            "formData": formData
+        }
+        var req = request(uploadOptions, function(err, resp, body) {
+            if (err) {
+                console.log('Error ', err);
+            } else {
+                console.log('upload successful', body)
             }
-            var req = request(uploadOptions, function(err, resp, body) {
-                if (err) {
-                    console.log('Error ', err);
-                } else {
-                    console.log('upload successful', body)
-                }
-            });
+        });
     }); 
-}; 
+  }; 
+
+async function addLogs(log, send = true) {
+    return	new Promise((resolve, reject) => {
+       try {
+            dbAddLog(log)
+            .then(() => {
+                if(send) {
+                    siteConnects.forEach(socket => {
+                        socket.send( JSON.stringify({type:"partialLogs", data:[log]}) );
+                        });
+                    }
+                resolve('LOG added');
+                });
+       }
+       catch(err) {
+            return reject( {type:"addLog", data:err.toString()} )
+       }
+    }); 
+  };
+
+function getNowDate() {
+    return dateFormat(new Date(), "yyyy-mm-dd HH:MM:ss.l o");
+ };
+
+function getError(err, type /*, errorCode, description*/) {
+    switch (err.type) {
+        case "newConnection": return '{"type":"error", "data":{"requestType":"'+type+'", "errorCode":"ERROR_INTERNAL_SERVER_ERROR", "errorDescription":'+JSON.stringify(err.data)+'}}';  
+        case "sceneStatuses": return '{"type":"error", "data":{"requestType":"'+type+'", "errorCode":"ERROR_INTERNAL_SERVER_ERROR", "errorDescription":'+JSON.stringify(err.data)+'}}';
+        case "status": return '{"type":"error", "data":{"requestType":"'+type+'", "errorCode":"ERROR_INTERNAL_SERVER_ERROR", "errorDescription":'+JSON.stringify(err.data)+'}}';   
+        case "scene": return '{"type":"error", "data":{"requestType":"'+type+'", "errorCode":"ERROR_INTERNAL_SERVER_ERROR", "errorDescription":'+JSON.stringify(err.data)+'}}';
+        case "finish": return '{"type":"error", "data":{"requestType":"'+type+'", "errorCode":"ERROR_INTERNAL_SERVER_ERROR", "errorDescription":'+JSON.stringify(err.data)+'}}';
+        default: return '{"type":"error", "data":{"requestType":"'+type+'", "errorCode":"ERROR_INTERNAL_SERVER_ERROR", "errorDescription":"'+JSON.stringify(err.data)+'"}}';
+    }
+  };

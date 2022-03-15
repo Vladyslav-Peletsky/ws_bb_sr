@@ -1,34 +1,27 @@
-
-[object Object]
-[object Object]
-[object Object]
-[object Object]
-{"action":"ECHO","data":"dsadasdas"}
-Sun Dec 26 2021 02:32:16 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdas"}
-Sun Dec 26 2021 03:03:57 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdas"}
-Sun Dec 26 2021 03:30:47 GMT+0200 (Восточная Европа, стандартное время) : {"action":"PфывфывыфING"}
-Sun Dec 26 2021 03:31:33 GMT+0200 (Восточная Европа, стандартное время) : {"action":"PфывфывыфING"}
-Sun Dec 26 2021 03:32:13 GMT+0200 (Восточная Европа, стандартное время) : {"action":"PфывфывыфING"}
-Sun Dec 26 2021 03:35:12 GMT+0200 (Восточная Европа, стандартное время) : {"action":"PфывфывыфING"}
-Sun Dec 26 2021 03:36:30 GMT+0200 (Восточная Европа, стандартное время) : {"action":"PфывфывыфING"}
-Sun Dec 26 2021 03:47:13 GMT+0200 (Восточная Европа, стандартное время) : {"action":"PфывфывыфING"}
-Sun Dec 26 2021 03:47:59 GMT+0200 (Восточная Европа, стандартное время) : {"action":"PфывфывыфING"}
-Sun Dec 26 2021 03:50:22 GMT+0200 (Восточная Европа, стандартное время) : {"action":"PфывфывыфING"}
-Tue Jan 04 2022 02:19:13 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:21:35 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:21:43 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:25:17 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:32:14 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:42:21 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:43:55 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:45:06 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:45:40 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:45:46 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:46:56 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:48:21 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:53:45 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:53:48 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:54:40 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:54:41 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 02:54:42 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
-Tue Jan 04 2022 03:01:43 GMT+0200 (Восточная Европа, стандартное время) : {"action":"ECHO","data":"dsadasdasdas"}
+Date: 2022-03-13T17:59:53+02:00, STATUS: GOOD, ClientID: b5288ec1-49a7-4dfc-9b1b-e4001993bfc5, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:52+02:00, STATUS: GOOD, ClientID: 8d1c4ea9-14da-4599-bc99-b7df1570b8d6, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:53+02:00, STATUS: GOOD, ClientID: 8d1c4ea9-14da-4599-bc99-b7df1570b8d6, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:54+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:55+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:53+02:00, STATUS: GOOD, ClientID: 8d1c4ea9-14da-4599-bc99-b7df1570b8d6, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:54+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:55+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:54+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:55+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:53+02:00, STATUS: GOOD, ClientID: 8d1c4ea9-14da-4599-bc99-b7df1570b8d6, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:54+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:55+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:54+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:55+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:53+02:00, STATUS: GOOD, ClientID: 8d1c4ea9-14da-4599-bc99-b7df1570b8d6, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:54+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:55+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:54+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:55+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:53+02:00, STATUS: GOOD, ClientID: 8d1c4ea9-14da-4599-bc99-b7df1570b8d6, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:29:54+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:29:55+02:00, STATUS: GOOD, ClientID: 9bcab03e-57e8-4c14-8510-db9f9231cfc7, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:56:35+02:00, STATUS: GOOD, ClientID: 718fdb6c-9968-458e-8d28-aae365872925, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:56:37+02:00, STATUS: GOOD, ClientID: 718fdb6c-9968-458e-8d28-aae365872925, TypeLog: CloseConnection, LOG: []
+Date: 2022-03-14T01:56:42+02:00, STATUS: GOOD, ClientID: 7b7508dd-3411-4899-a714-9c00114affbf, TypeLog: NewConnection, LOG: []
+Date: 2022-03-14T01:56:43+02:00, STATUS: GOOD, ClientID: 7b7508dd-3411-4899-a714-9c00114affbf, TypeLog: CloseConnection, LOG: []
