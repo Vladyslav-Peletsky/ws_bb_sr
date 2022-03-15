@@ -316,14 +316,12 @@ app.post('/offlinereco', (req, res) => {
                     console.log(err);
                 });
             }
-
       });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        console.log('file: '+JSON.stringify(fieldname));
         file.pipe(fs.createWriteStream('./scenes/scenesOffline/'+fieldname+'.rec'));
     });
     busboy.on('finish', function() {
-      console.log('Upload complete');
+      addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"offlineRec", "data":sceneIDUpload})
       res.setHeader("Content-Type", "application/json");
       res.status(207).json(answer);
       res.end();
@@ -358,9 +356,9 @@ async function sendPostResult (url, scenes, resultFilePath, sceneID) {
         }
         var req = request(uploadOptions, function(err, resp, body) {
             if (err) {
-                console.log('Error ', err);
+                addLogs({"thedate":getNowDate(), "sessionid":"", "status":"ERROR", "messagefrom":"server", "action":"sendToApi", "data":sceneID + ' : '+ err.toString()})
             } else {
-                console.log('upload successful', body)
+                addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"server", "action":"sendToApi", "data":sceneID})
             }
         });
     }); 

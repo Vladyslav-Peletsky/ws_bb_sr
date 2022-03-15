@@ -36,7 +36,7 @@ let table;
         });
   };
   
-  $(document).ready(function() {
+
     let HOST = location.origin.replace(/^http/, 'ws')
     let socket = new WebSocket(HOST+'/getLogs');
     
@@ -87,6 +87,5 @@ let table;
         socket.send('{"type":"getAllLogs"}');
     });
 
-});
 
 
