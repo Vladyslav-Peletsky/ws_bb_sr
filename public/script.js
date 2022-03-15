@@ -37,6 +37,25 @@ let table;
   };
   
 
+
+  /* reconnect...
+  function connectWS() {
+        let HOST = location.origin.replace(/^http/, 'ws')
+        let socket = new WebSocket(HOST+'/getLogs');
+        
+        table.destroy();
+        
+        socket.onopen = function() {
+            document.getElementById("statusConnection").textContent='Статус: Соединение установлено';
+            document.getElementById("statusConnection").classList.add('connectionOn');
+            socket.send('{"type":"getAllLogs"}');
+        };
+    };
+
+    connectWS(); */
+
+
+    ///delete for reconnect
     let HOST = location.origin.replace(/^http/, 'ws')
     let socket = new WebSocket(HOST+'/getLogs');
     
@@ -46,10 +65,14 @@ let table;
         socket.send('{"type":"getAllLogs"}');
     };
     
+    ///delete for reconnect
+
     socket.onclose = function(event) {
         document.getElementById("statusConnection").textContent='Статус: WebSocket соединение закрыто, код:' + event.code + ' причина:' + event.reason;
         document.getElementById("statusConnection").classList.remove( 'connectionOn' );
         document.getElementById("statusConnection").classList.add( 'connectionOff' );
+        onsole.log(event);
+        //connectWS(); reconnect...
     };
   
     socket.onmessage = function(event) {
@@ -77,15 +100,8 @@ let table;
     };
   
     socket.onerror = function(error) {
-      document.write("Ошибка " + error.message);
+        console.log("Ошибка " + error.message);
     };
-  
-
-    // Listen for possible errors
-    socket.addEventListener('error', function (event) {
-        console.log('WebSocket error: ', event);
-    });
-
 
     $('#tableDestroy').on( 'click', function () {
         table.destroy();
