@@ -39,6 +39,7 @@ let dbScripts = {
   
 
 const app = expressWs(express()).app;
+app.use(express.static(process.cwd()+'/public')); 
 app.set('port', process.env.PORT || 3000);
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'));
@@ -285,7 +286,6 @@ app.get('/onlinereco/scene/:sceneID', (req, res) => {
   });
 
 app.get('/logs',(req,res) => {
-    app.use(express.static(process.cwd()+'/public')); 
     res.status(200);
     res.sendFile(process.cwd()+'/public/index.html');
   });
