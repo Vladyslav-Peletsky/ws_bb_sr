@@ -71,7 +71,7 @@ app.ws('/onlinereco', (ws, req) => {
     connects.push(ws);
     
     newSession(sessionId)
-    .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"internal_server", "action":"NewConnection", "data":"Successful"}))
+    .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"internal_server", "action":"NewConnection", "data":JSON.stringify(req.headers)}))
     .catch(function(err){
         try {
             addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"internal_server", "action":"NewConnection", "data":err.toString()})
@@ -293,6 +293,7 @@ app.get('/logs',(req,res) => {
 app.post('/offlinereco', (req, res) => {
     var busboy = new Busboy({ headers: req.headers });
     let answer = [];
+    addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"offlineRecPOST", "data":JSON.stringify(req.headers)})
     
     busboy.on('field', (fieldname, file, filename, encoding, mimetype) => { 
         console.log('field: '+file);
@@ -307,7 +308,7 @@ app.post('/offlinereco', (req, res) => {
         let documentRecognitionStatusCode = JSON.parse(file)[0].documentRecognitionStatusCode;
         if (documentRecognitionStatusCode == 'NeedRecognition')
             {
-                sleep(5000).then(function(result) {console.log(result)})
+                sleep(10000).then(function(result) {console.log(result)})
                 .then(() => unzipSceneFile(sceneIDUpload, './scenes/scenesOffline/'+sceneIDUpload+'.rec'))
                 .then(() => deleteFile('./scenes/scenesOffline/'+sceneIDUpload+'.rec'))
                 .then(() => getSceneFile(sceneIDUpload))
@@ -318,10 +319,11 @@ app.post('/offlinereco', (req, res) => {
             }
       });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+        console.log('file', fieldname);
+        addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"offlineRecFileUpload", "data":fieldname})
         file.pipe(fs.createWriteStream('./scenes/scenesOffline/'+fieldname+'.rec'));
     });
-    busboy.on('finish', function(fieldname) {
-      addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"offlineRec", "data":fieldname})
+    busboy.on('finish', function() {
       res.setHeader("Content-Type", "application/json");
       res.status(207).json(answer);
       res.end();
@@ -370,9 +372,7 @@ async function addLogs(log, send = true) {
             dbAddLog(log)
             .then(() => {
                 if(send) {
-                    console.log('send partial LOG');
                     siteConnects.forEach(socket => {
-                        console.log('send partial LOG to CLIENT');
                         socket.send( JSON.stringify({type:"partialLogs", data:[log]}) );
                         });
                     }
