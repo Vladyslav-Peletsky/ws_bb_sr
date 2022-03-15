@@ -71,10 +71,10 @@ app.ws('/onlinereco', (ws, req) => {
     connects.push(ws);
     
     newSession(sessionId)
-    .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"internal_server", "action":"NewConnection", "data":JSON.stringify(req.headers)}))
+    .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"NewConnection", "data":JSON.stringify(req.headers)}))
     .catch(function(err){
         try {
-            addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"internal_server", "action":"NewConnection", "data":err.toString()})
+            addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"client", "action":"NewConnection", "data":err.toString()})
           } 
           catch(err) {
               console.log(err.toString())
@@ -90,10 +90,10 @@ app.ws('/onlinereco', (ws, req) => {
             });
          
         deleteSession (sessionId)
-        .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"internal_server", "action":"CloseConnection", "data":""}))
+        .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"CloseConnection", "data":""}))
         .catch(function(err){
             try {
-                addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"internal_server", "action":"CloseConnection", "data":err.toString()})
+                addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"ERROR", "messagefrom":"server", "action":"CloseConnection", "data":err.toString()})
               } 
               catch(err) {
                   console.log(err.toString())
