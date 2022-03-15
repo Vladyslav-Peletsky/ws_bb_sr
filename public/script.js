@@ -38,8 +38,7 @@ let table;
   
   $(document).ready(function() {
     let HOST = location.origin.replace(/^http/, 'ws')
-    let socket = new WebSocket(HOST+'/logs');
-    //let socket = new WebSocket("ws://ws-bb-sr.herokuapp.com/logs");
+    let socket = new WebSocket(HOST+'/getLogs');
     
     socket.onopen = function() {
         document.getElementById("statusConnection").textContent='Статус: Соединение установлено';
