@@ -38,7 +38,7 @@ let table;
   
   $(document).ready(function() {
 
-    let socket = new WebSocket("ws://localhost:3000/getLogs");
+    let socket = new WebSocket("wss://ws-bb-sr.herokuapp.com/logs");
     
     socket.onopen = function() {
         document.getElementById("statusConnection").textContent='Статус: Соединение установлено';
