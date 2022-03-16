@@ -71,7 +71,7 @@ let table;
         document.getElementById("statusConnection").textContent='Статус: WebSocket соединение закрыто, код:' + event.code + ' причина:' + event.reason;
         document.getElementById("statusConnection").classList.remove( 'connectionOn' );
         document.getElementById("statusConnection").classList.add( 'connectionOff' );
-        сonsole.log(event);
+        console.log(event);
         //connectWS(); reconnect...
     };
   
