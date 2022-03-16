@@ -38,7 +38,7 @@ let table;
   
 
 
-  /* reconnect...
+
   function connectWS() {
         let HOST = location.origin.replace(/^http/, 'ws')
         let socket = new WebSocket(HOST+'/getLogs');
@@ -52,18 +52,18 @@ let table;
         };
     };
 
-    connectWS(); */
+    connectWS(); 
 
 
     ///delete for reconnect
-    let HOST = location.origin.replace(/^http/, 'ws')
+    /*let HOST = location.origin.replace(/^http/, 'ws')
     let socket = new WebSocket(HOST+'/getLogs');
     
     socket.onopen = function() {
         document.getElementById("statusConnection").textContent='Статус: Соединение установлено';
         document.getElementById("statusConnection").classList.add('connectionOn');
         socket.send('{"type":"getAllLogs"}');
-    };
+    };*/
     
     ///delete for reconnect
 
@@ -71,8 +71,23 @@ let table;
         document.getElementById("statusConnection").textContent='Статус: WebSocket соединение закрыто, код:' + event.code + ' причина:' + event.reason;
         document.getElementById("statusConnection").classList.remove( 'connectionOn' );
         document.getElementById("statusConnection").classList.add( 'connectionOff' );
-        console.log(event);
         //connectWS(); reconnect...
+        
+        //reconnect...
+        let i = 3
+        function reconnect() {
+            let message = document.getElementById("statusConnection").textContent;
+            document.getElementById("statusConnection").textContent=message + '  RECONNECT AFTER ' + i;
+            i--;
+            if ( (i-3) <= 0 ) {
+                console.log('reconnect WS')
+                connectWS(); 
+            }
+        }
+        let timerId = setInterval(() => reconnect(), 1000);
+        setTimeout(() => { clearInterval(timerId); }, 4000);
+        //reconnect...
+
     };
   
     socket.onmessage = function(event) {
@@ -101,6 +116,22 @@ let table;
   
     socket.onerror = function(error) {
         console.log("Ошибка " + error.message);
+
+        //reconnect...
+        let i = 3
+        function reconnect() {
+            let message = document.getElementById("statusConnection").textContent;
+            document.getElementById("statusConnection").textContent=message + '  RECONNECT AFTER ' + i;
+            i--;
+            if ( (i-3) <= 0 ) {
+                console.log('reconnect WS')
+                connectWS(); 
+            }
+        }
+        let timerId = setInterval(() => reconnect(), 1000);
+        setTimeout(() => { clearInterval(timerId); }, 4000);
+        //reconnect...
+
     };
 
     $('#tableDestroy').on( 'click', function () {
