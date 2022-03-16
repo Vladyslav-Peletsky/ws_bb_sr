@@ -40,20 +40,20 @@ let table;
 
 
   function connectWS() {
-        let HOST = location.origin.replace(/^http/, 'ws')
-        let socket = new WebSocket(HOST+'/getLogs');
-        
+        socket = new WebSocket(HOST+'/getLogs');
         table.destroy();
-        
-        socket.onopen = function() {
-            document.getElementById("statusConnection").textContent='Статус: Соединение установлено';
-            document.getElementById("statusConnection").classList.add('connectionOn');
-            socket.send('{"type":"getAllLogs"}');
-        };
+    };
+
+    let HOST = location.origin.replace(/^http/, 'ws')
+    let socket = new WebSocket(HOST+'/getLogs');
+
+    socket.onopen = function() {
+        document.getElementById("statusConnection").textContent='Статус: Соединение установлено';
+        document.getElementById("statusConnection").classList.add('connectionOn');
+        socket.send('{"type":"getAllLogs"}');
     };
 
     loadTable();
-    connectWS(); 
 
 
     ///delete for reconnect
@@ -75,10 +75,12 @@ let table;
         //connectWS(); reconnect...
         
         //reconnect...
+        let message = document.getElementById("statusConnection").textContent;
         let i = 3
         function reconnect() {
-            let message = document.getElementById("statusConnection").textContent;
-            document.getElementById("statusConnection").textContent=message + '  RECONNECT AFTER ' + i;
+            let text = message + '  RECONNECT AFTER  ';
+            text = text.substring(0, text.length - 1);
+            document.getElementById("statusConnection").textContent=text + i;
             i--;
             if ( (i-3) <= 0 ) {
                 console.log('reconnect WS')
