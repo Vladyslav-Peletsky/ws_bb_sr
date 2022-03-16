@@ -52,6 +52,7 @@ let table;
         };
     };
 
+    loadTable();
     connectWS(); 
 
 
@@ -95,6 +96,7 @@ let table;
         switch (jsonMessage.type) {
             case 'allLogs':
                 allLogs = jsonMessage.data;
+                table.destroy();
                 loadTable();
             break;
         
