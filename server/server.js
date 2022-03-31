@@ -1,4 +1,5 @@
-import {newSession, updateSession, deleteSession, newScene, finishNewScene, deleteScene, sceneStatuses, queryScript, dbAddLog, getAllLogs} from './database.js';
+import {config} from './config/config.js';
+import  * as db  from './database.js';
 import {unzipSceneFile, deleteFile, getSceneFile, sceneRecognizedUpdateStatus} from './files.js';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
@@ -9,37 +10,34 @@ import request from 'request';
 import { format } from 'fecha';
 import dateFormat, { masks } from "dateformat";
 
+
 //Инициализация базы (удаление и создание таблиц)
-let dbScripts = {
-    dropLogsTable:{"script":"DROP TABLE IF EXISTS dbo.Logs", "desc":"Таблица Logs удалена"},
-    dropScenesTable:{"script":"DROP TABLE IF EXISTS dbo.Scenes", "desc":"Таблица Scenes удалена"},
-    dropClientSessionsTable:{"script":"DROP TABLE IF EXISTS dbo.ClientSessions", "desc":"Таблица ClientSessions удалена"},
-    createSchema:{"script":"CREATE SCHEMA IF NOT EXISTS dbo", "desc":"Создана схема dbo"},
-    createLogTable:{"script":"CREATE TABLE IF NOT EXISTS dbo.Logs (Id serial primary key, TheDate text NULL, SessionID uuid NULL, Status text NULL, MessageFrom text, Action text, Data text)", "desc":"Создана таблица Logs"},
-    createScenesTable:{"script":"CREATE TABLE IF NOT EXISTS dbo.Scenes (SceneID uuid UNIQUE NOT NULL, Processed integer NOT NULL, PutUrl character(200), GetUrl character(200), Checksum character(32) NULL, isActive int NOT NULL, DistributorID character(50) NOT NULL, VisitID character(50) NOT NULL, DocumentID character(50) NOT NULL, CustomerID character(50) NOT NULL, EmployeeID character(50) NOT NULL, Custom character(5000) NULL)", "desc":"Создана таблица Scenes"},
-    createClientSessionsTable:{"script":"CREATE TABLE IF NOT EXISTS dbo.ClientSessions (SessionID uuid NOT NULL, isActive integer, DistributorID character(50) NULL, VisitID character(50) NULL, DocumentID character(50) NULL, CustomerID character(50) NULL, EmployeeID character(50) NULL, Custom character(5000) NULL, CreateDate timestamp without time zone NOT NULL, UpdatedDate timestamp without time zone NOT NULL)", "desc":"Создана таблица ClientSessions"}
-  };
-  queryScript(dbScripts.dropLogsTable)
-  .then(() => queryScript(dbScripts.dropScenesTable))
-  .then(() => queryScript(dbScripts.dropClientSessionsTable))
-  .then(() => queryScript(dbScripts.createSchema))
-  .then(() => queryScript(dbScripts.createLogTable))
-  .then(() => queryScript(dbScripts.createScenesTable))
-  .then(() => queryScript(dbScripts.createClientSessionsTable))
+  let defaultRecResData = [];
+  getDefaultRecResData().then(function(result) { defaultRecResData = result; })
+  .then(() => db.queryScript("DROP TABLE IF EXISTS dbo.Logs"))
+  .then(() => db.queryScript("DROP TABLE IF EXISTS dbo.Scenes"))
+  .then(() => db.queryScript("DROP TABLE IF EXISTS dbo.ClientSessions"))
+  .then(() => db.queryScript("DROP TABLE IF EXISTS dbo.RecognitionResults"))
+  .then(() => db.queryScript("CREATE SCHEMA IF NOT EXISTS dbo"))
+  .then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.Logs (Id serial primary key, TheDate text NULL, SessionID uuid NULL, Status text NULL, MessageFrom text, Action text, Data text)"))
+  .then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.Scenes (SceneID uuid UNIQUE NOT NULL, Processed integer NOT NULL, PutUrl text, GetUrl text, Checksum text NULL, isActive int NOT NULL, DistributorID text NOT NULL, VisitID text NOT NULL, DocumentID text NOT NULL, CustomerID text NOT NULL, EmployeeID text NOT NULL, Custom text NULL)"))
+  .then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.ClientSessions (SessionID uuid NOT NULL, isActive integer, DistributorID text NULL, VisitID text NULL, DocumentID text NULL, CustomerID text NULL, EmployeeID text NULL, Custom text NULL, CreateDate timestamp without time zone NOT NULL, UpdatedDate timestamp without time zone NOT NULL)"))
+  .then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.RecognitionResults (DistributorID text UNIQUE NOT NULL, RecognitionStatus text NOT NULL, RecognitionReport text NOT NULL, RecognitionPhoto bytea NOT NULL)"))
+  .then(() => db.queryScript("INSERT INTO dbo.RecognitionResults (DistributorID, RecognitionStatus, RecognitionReport, RecognitionPhoto) VALUES ($1, $2, $3, $4)", defaultRecResData))
   .then(() => addLogs({"thedate":getNowDate(), "sessionId":"", "status":"GOOD", "messagefrom":"internal_server", "action":"Init DB", "data":"Successful"}, false))
   .catch(function(err){ 
       try {
-          addLogs({"thedate":getNowDate(), "sessionId":"", "status":"ERROR", "messagefrom":"internal_server", "action":"Init DB", "data":err.toString()}, false)
+          addLogs({"thedate":getNowDate(), "sessionId":"", "status":"ERROR", "messagefrom":"internal_server", "action":"Init DB", "data":err}, false);
+          console.log(err);
         } 
         catch(err) {
-            console.log(err.toString())
+          console.log(err);
         } 
         });
   //Инициализация базы (удаление и создание таблиц)
   
-
 const app = expressWs(express()).app;
-app.use(express.static(process.cwd()+'/public')); 
+app.use(express.static(config.public_path)); 
 app.set('port', process.env.PORT || 3000);
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'));
@@ -70,7 +68,7 @@ app.ws('/onlinereco', (ws, req) => {
     ws.sessionId = sessionId;
     connects.push(ws);
     
-    newSession(sessionId)
+    db.newSession(sessionId)
     .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"NewConnection", "data":JSON.stringify(req.headers)}))
     .catch(function(err){
         try {
@@ -89,7 +87,7 @@ app.ws('/onlinereco', (ws, req) => {
             return (conn === ws) ? false : true;
             });
          
-        deleteSession (sessionId)
+        db.deleteSession (sessionId)
         .then(() => addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"CloseConnection", "data":""}))
         .catch(function(err){
             try {
@@ -108,8 +106,8 @@ app.ws('/onlinereco', (ws, req) => {
                 switch (jsonMessage.type) {
                     case 'connection':
                         addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"connection", "data":JSON.stringify(jsonMessage)})
-                        .then(() => updateSession(sessionId, jsonMessage))
-                        .then(() => sceneStatuses(sessionId))
+                        .then(() => db.updateSession(sessionId, jsonMessage))
+                        .then(() => db.sceneStatuses(sessionId))
                         .then(function(result) {
                                 addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})
                                 ws.send(result);
@@ -129,8 +127,8 @@ app.ws('/onlinereco', (ws, req) => {
                     
                     case 'scene':
                         addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"scene", "data":JSON.stringify(jsonMessage)})
-                        .then(() => newScene(sessionId, jsonMessage.data.sceneID))
-                        .then(() => sceneStatuses(sessionId))
+                        .then(() => db.newScene(sessionId, jsonMessage.data.sceneID))
+                        .then(() => db.sceneStatuses(sessionId))
                         .then(function(result) {
                                 addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})
                                 ws.send(result);
@@ -149,14 +147,14 @@ app.ws('/onlinereco', (ws, req) => {
                         break;
                     
                     case 'finish':
-                        let scenePath = process.cwd()+'/scenes/'+jsonMessage.data.sceneID+'.rec';
-                        let sceneJsonPath = process.cwd()+'/scenes/'+jsonMessage.data.sceneID+'.json';
+                        let scenePath = config.new_scene + jsonMessage.data.sceneID + '.rec';
+                        let sceneJsonPath = config.new_scene + jsonMessage.data.sceneID + '.json';
 
                         addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"finish", "data":JSON.stringify(jsonMessage)})    
                         .then(() => unzipSceneFile(jsonMessage.data.sceneID, scenePath))
                         .then(() => deleteFile(scenePath))
-                        .then(() => finishNewScene(jsonMessage.data.sceneID, jsonMessage.data.checksum))
-                        .then(() => sceneStatuses(sessionId)
+                        .then(() => db.finishNewScene(jsonMessage.data.sceneID, jsonMessage.data.checksum))
+                        .then(() => db.sceneStatuses(sessionId)
                         .then(function(result) {
                             addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})     
                             ws.send(result);
@@ -165,7 +163,7 @@ app.ws('/onlinereco', (ws, req) => {
                         .then(() => sceneRecognizedUpdateStatus(jsonMessage.data.sceneID))
                         .then(() => deleteFile(sceneJsonPath))
                         .then(() => sleep(8000))
-                        .then(() => sceneStatuses(sessionId)
+                        .then(() => db.sceneStatuses(sessionId)
                         .then(function(result) {
                             addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})     
                             ws.send(result);
@@ -185,7 +183,7 @@ app.ws('/onlinereco', (ws, req) => {
 
                     case 'status':
                     addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"status", "data":JSON.stringify(jsonMessage)})    
-                    .then(() => sceneStatuses(sessionId)
+                    .then(() => db.sceneStatuses(sessionId)
                     .then(function(result) {
                         addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})     
                         ws.send(result);
@@ -204,8 +202,8 @@ app.ws('/onlinereco', (ws, req) => {
                     
                     case 'delete':
                         addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"client", "action":"delete", "data":JSON.stringify(jsonMessage)}) 
-                        .then(() => deleteScene(sessionId, jsonMessage.data.sceneID))
-                        .then(() => sceneStatuses(sessionId)
+                        .then(() => db.deleteScene(sessionId, jsonMessage.data.sceneID))
+                        .then(() => db.sceneStatuses(sessionId)
                         .then(function(result) {
                             addLogs({"thedate":getNowDate(), "sessionid":sessionId, "status":"GOOD", "messagefrom":"server", "action":"sceneStatuses", "data":result})     
                             ws.send(result);
@@ -253,7 +251,7 @@ app.ws('/getLogs', (ws, req) => {
                 switch (jsonMessage.type) {
                     case 'getAllLogs':
 
-                        getAllLogs().then( function(result) {
+                        db.getAllLogs().then( function(result) {
                             ws.send( JSON.stringify({type:"allLogs", data:JSON.parse(result)}) );
                         })
 
@@ -267,28 +265,37 @@ app.ws('/getLogs', (ws, req) => {
                 ws.send('{"type":"ERROR"}');
             }
     });
-  });
-
+});
 
 app.put('/onlinereco/scene/:sceneID', (req, res) => {
-    let scenePath = process.cwd()+'/scenes/'+req.params.sceneID+'.rec'
+    let scenePath = config.new_scene + req.params.sceneID + '.rec'
     var writeStream = fs.createWriteStream(scenePath);
         req.pipe(writeStream);
     req.on('end', function () {
     res.send('ok');
     res.end();
     });
-  });
+});
  
 app.get('/onlinereco/scene/:sceneID', (req, res) => {
-    let scenePath = process.cwd()+'/scenes/result/'+req.params.sceneID+'.rec' 
+    let scenePath = scene_results + req.params.sceneID + '.rec' 
     res.download(scenePath);
-  });
+});
 
-app.get('/logs',(req,res) => {
+app.get('/',(req,res) => {
     res.status(200);
-    res.sendFile(process.cwd()+'/public/index.html');
-  });
+    res.sendFile(config.public_path + 'index.html');
+});
+
+app.get('/log',(req,res) => {
+    res.status(200);
+    res.sendFile(config.public_path + 'log.html');
+});
+
+app.get('/recognizedresults',(req,res) => {
+    res.status(200);
+    res.sendFile(config.public_path + 'recognizedresults.html');
+});
 
 app.post('/offlinereco', (req, res) => {
     var busboy = new Busboy({ headers: req.headers });
@@ -296,7 +303,6 @@ app.post('/offlinereco', (req, res) => {
     addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"offlineRecPOST", "data":JSON.stringify(req.headers)})
     
     busboy.on('field', (fieldname, file, filename, encoding, mimetype) => { 
-        console.log('field: '+file);
         let sceneIDUpload = JSON.parse(file)[0].sceneID;
         answer = JSON.parse(file);
         answer[0].responseStatus = 201;
@@ -308,20 +314,20 @@ app.post('/offlinereco', (req, res) => {
         let documentRecognitionStatusCode = JSON.parse(file)[0].documentRecognitionStatusCode;
         if (documentRecognitionStatusCode == 'NeedRecognition')
             {
-                sleep(10000).then(function(result) {console.log(result)})
-                .then(() => unzipSceneFile(sceneIDUpload, './scenes/scenesOffline/'+sceneIDUpload+'.rec'))
-                .then(() => deleteFile('./scenes/scenesOffline/'+sceneIDUpload+'.rec'))
+                sleep(10000)
+                .then(() => unzipSceneFile(sceneIDUpload, config.new_scene + sceneIDUpload+'.rec'))
+                .then(() => deleteFile(config.new_scene + sceneIDUpload+'.rec'))
                 .then(() => getSceneFile(sceneIDUpload))
-                .then(() => sendPostResult(resulturl, answer, './scenes/result/'+sceneIDUpload+'.rec', sceneIDUpload))
+                .then(() => deleteFile(config.new_scene + sceneIDUpload+'.json'))
+                .then(() => sendPostResult(resulturl, answer, config.scene_results + sceneIDUpload+'.rec', sceneIDUpload))
                 .catch(function(err){
                     console.log(err);
                 });
             }
       });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        console.log('file', fieldname);
         addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"offlineRecFileUpload", "data":fieldname})
-        file.pipe(fs.createWriteStream('./scenes/scenesOffline/'+fieldname+'.rec'));
+        file.pipe(fs.createWriteStream(config.new_scene + fieldname+'.rec'));
     });
     busboy.on('finish', function() {
       res.setHeader("Content-Type", "application/json");
@@ -329,17 +335,132 @@ app.post('/offlinereco', (req, res) => {
       res.end();
     });
     return req.pipe(busboy);
-  }); 
+}); 
 
-async function sleep(timeout) {
+app.post('/addRecognitionResults', (req, res) => {
+    var busboy = new Busboy({ headers: req.headers });
+    let resultSettings = {};
+    addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"client", "action":"addRecognitionResults", "data":""})
+    
+    busboy.on('field', (fieldname, file, filename, encoding, mimetype) => { 
+        if (fieldname ==='distributorId') {resultSettings.distributorId = file} else if (fieldname ==='recognitionStatusCode') {resultSettings.recognitionStatusCode = file}
+      });
+    
+    busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {       
+        let name =  (fieldname === 'scenejson') ? 'scene.json' :'scene.jpg';
+        file.pipe(fs.createWriteStream(config.new_scene + name));
+    });
+
+    busboy.on('finish', function() {
+      let report = JSON.parse(fs.readFileSync(config.new_scene + 'scene.json', 'utf8')).report;
+      if (report !== 'undefined') {
+        let photo = fs.readFileSync(config.new_scene + 'scene.jpg', {encoding:'hex', flag:'r'});
+        db.setRecognitionResults(resultSettings.distributorId, resultSettings.recognitionStatusCode, JSON.stringify(report), '\\x' +photo)
+        .then(function() { 
+            fs.unlinkSync(config.new_scene + 'scene.json');
+            fs.unlinkSync(config.new_scene + 'scene.jpg');
+        })
+        .then(function() { responce({success : true, distributorId : resultSettings.distributorId }); })
+        .catch(function(err){
+            responce( {success : false, error : err.toString() } );
+        });
+      } else {
+        responce( {success : false, error:'report undefined ' } );
+      }
+
+      function responce(answer) {
+        res.setHeader("Content-Type", "application/json");
+        res.status(201).json(answer);
+        res.end();
+        }
+    });
+    return req.pipe(busboy);
+}); 
+
+app.post('/getRecognitionResults', (req, res) => {
+    var busboy = new Busboy({ headers: req.headers });
+
+    busboy.on('finish', function() {
+        db.getRecognitionResults()
+        .then(function(result) { 
+            responce(200, result);
+        })
+        .catch(function(err){
+            responce(500, {success : false, error : err.toString() } );
+        });
+
+        function responce(code, answer) {
+            res.setHeader("Content-Type", "application/json");
+            res.status(code).json(answer);
+            res.end();
+            }
+    });
+    return req.pipe(busboy);
+}); 
+
+app.post('/getRecognitionResultsRowDetails', (req, res) => {
+    var busboy = new Busboy({ headers: req.headers });
+    let resultSettings = {};
+    busboy.on('field', (fieldname, file, filename, encoding, mimetype) => { 
+        let field = JSON.parse(fieldname);
+        if (Object.keys(field)[0] ==='distributorid') {
+            resultSettings.distributorid = field.distributorid};
+      });
+    
+      busboy.on('finish', function() {
+        db.getResultRowDetails(resultSettings.distributorid)
+        .then(function(result) { 
+            responce(200, result);
+        })
+        .catch(function(err){
+            responce(500, {success : false, error : err.toString() } );
+        });
+
+        function responce(code, answer) {
+            res.setHeader("Content-Type", "application/json");
+            res.status(code).json(answer);
+            res.end();
+            }
+    });
+    return req.pipe(busboy);
+}); 
+
+app.post('/deleteRecognitionResultsRow', (req, res) => {
+    var busboy = new Busboy({ headers: req.headers });
+    let resultSettings = {};
+    busboy.on('field', (fieldname, file, filename, encoding, mimetype) => { 
+        let field = JSON.parse(fieldname);
+        if (Object.keys(field)[0] ==='distributorid') {
+            resultSettings.distributorid = field.distributorid};
+      });
+    
+      busboy.on('finish', function() {
+        db.deleteResultRow(resultSettings.distributorid)
+        .then(function(result) { 
+            responce(200, result);
+        })
+        .catch(function(err){
+            responce(500, {success : false, error : err.toString() } );
+        });
+
+        function responce(code, answer) {
+            res.setHeader("Content-Type", "application/json");
+            res.status(code).json(answer);
+            res.end();
+            }
+    });
+    return req.pipe(busboy);
+}); 
+
+function sleep(timeout) {
     return	new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve('Inside test await');
         }, timeout);
     });
-  };
+};
 
-async function sendPostResult (url, scenes, resultFilePath, sceneID) {
+function sendPostResult (url, scenes, resultFilePath, sceneID) {
     delete scenes[0].responseStatus;
     scenes[0].fileName = sceneID+'.rec';
 
@@ -364,12 +485,12 @@ async function sendPostResult (url, scenes, resultFilePath, sceneID) {
             }
         });
     }); 
-  }; 
+}; 
 
-async function addLogs(log, send = true) {
+function addLogs(log, send = true) {
     return	new Promise((resolve, reject) => {
        try {
-            dbAddLog(log)
+            db.dbAddLog(log)
             .then(() => {
                 if(send) {
                     siteConnects.forEach(socket => {
@@ -377,17 +498,20 @@ async function addLogs(log, send = true) {
                         });
                     }
                 resolve('LOG added');
-                });
+                })
+            .catch(function(err){ 
+                console.log(err);
+                  });
        }
        catch(err) {
             return reject( {type:"addLog", data:err.toString()} )
        }
     }); 
-  };
+};
 
 function getNowDate() {
     return dateFormat(new Date(), "yyyy-mm-dd HH:MM:ss.l o");
- };
+};
 
 function getError(err, type /*, errorCode, description*/) {
     switch (err.type) {
@@ -398,4 +522,22 @@ function getError(err, type /*, errorCode, description*/) {
         case "finish": return '{"type":"error", "data":{"requestType":"'+type+'", "errorCode":"ERROR_INTERNAL_SERVER_ERROR", "errorDescription":'+JSON.stringify(err.data)+'}}';
         default: return '{"type":"error", "data":{"requestType":"'+type+'", "errorCode":"ERROR_INTERNAL_SERVER_ERROR", "errorDescription":"'+JSON.stringify(err.data)+'"}}';
     }
-  };
+};
+
+function getDefaultRecResData () {
+    return	new Promise((resolve, reject) => {
+            try {
+                let photo  = fs.readFileSync(config.default_scene_result_path + 'scene.jpg', {encoding:'hex', flag:'r'});
+                let report = fs.readFileSync(config.default_scene_result_path + 'report.json', 'utf8');
+                let data = [
+                    '-1',
+                    'RecognizedOk',
+                    report,
+                    '\\x' +photo
+                ]
+                return resolve(data);
+            } catch(err) {
+                return reject( {type:"getDefaultRecData", data:err.toString()} );
+            }
+        });
+};

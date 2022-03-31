@@ -1,16 +1,17 @@
-import {sceneRecognized} from './database.js';
+import {config} from './config/config.js';
+import * as db from './database.js';
 import AdmZip  from 'adm-zip';
 import * as fs from 'fs';
 import { format } from 'fecha';
 import md5 from 'md5';
 
-async function unzipSceneFile(sceneID, scenePath) {
+function unzipSceneFile(sceneID, scenePath) {
     return	new Promise((resolve, reject) => {
         try {
-            let sceneFolder = process.cwd()+'/scenes/';
+            let sceneFolder = config.new_scene;
             var zip = new AdmZip(scenePath);
             zip.extractEntryTo("scene.json", sceneFolder, false, true);
-            fs.rename(sceneFolder+'scene.json', sceneFolder+sceneID+'.json', () => { console.log("\nFile Renamed!\n"); });
+            fs.renameSync( sceneFolder + 'scene.json', sceneFolder + sceneID + '.json' );
             return resolve('unzipSceneFile: '+sceneID); 
         }
         catch(err) {
@@ -19,7 +20,7 @@ async function unzipSceneFile(sceneID, scenePath) {
     });  
   };
 
-async function deleteFile(scenePath) {
+function deleteFile(scenePath) {
     return	new Promise((resolve, reject) => {
         fs.unlink(scenePath, function (err) {
             if (err) {
@@ -31,30 +32,37 @@ async function deleteFile(scenePath) {
     });
   };
 
-
-async function getSceneFile(sceneID) { // creating archives
+function getSceneFile(sceneID) { // creating archives
     return	new Promise((resolve, reject) => {
-        let sceneFilePath = './scenes/'+sceneID+'.json';
+        let sceneFilePath = config.new_scene + sceneID+'.json';
         let sceneResult = {};
         let sceneReport = {};
+        let bufPhoto;
                   
         sceneResultFun(sceneFilePath)
         .then(function(result) { sceneResult = result })
-        .then(() => sceneReportFun()
-        .then(function(result) { sceneReport = result }))
-        .then(() => copyResults( sceneReport, sceneResult, sceneID )
-        .then(function() { 
+        .then(() => db.getResultReport((sceneResult.distributorID === 'undefined')? '-1': sceneResult.distributorID)
+        .then(function(result) { sceneReport.report = JSON.parse(result) }))
+        .then(() => db.getResultPhoto((sceneResult.distributorID === 'undefined')? '-1': sceneResult.distributorID)
+        .then(function(result) { 
+            if (typeof Buffer.from === "function") {
+                bufPhoto = Buffer.from(result, 'base64');
+            } else {
+                // older Node versions, now deprecated
+                bufPhoto = new Buffer(result, 'base64');
+            }
+        }))
+        .then(() => copyResults( sceneReport, sceneResult, bufPhoto, sceneID)
+        .then(function() {
             return resolve('createResultScene: '+sceneID); 
         }))
         .catch(function(err){
             console.log('ERROR createResultScene');
             console.log(err);
             return reject( {type:"getSceneFile", data:err.toString()} );
-        });
-                               
-                        
+        });           
     });          
-  };
+};
 
 function sceneResultFun(sceneFilePath) {
     return	new Promise((resolve, reject) => {
@@ -68,22 +76,9 @@ function sceneResultFun(sceneFilePath) {
             return reject( {type:"sceneResultFun", data:err.toString()} );
         }
       });
-  };
+};
 
-function sceneReportFun() {
-    return	new Promise((resolve, reject) => {
-        try {
-            let sceneReport = {};
-            sceneReport = JSON.parse(fs.readFileSync('./defaultSceneResult/report.json', 'utf8')); 
-            return resolve(sceneReport);
-        }
-        catch(err) {
-            return reject( {type:"sceneReportFun", data:err.toString()} );
-        }
-      });
-  };
-
-function copyResults(sceneReport, sceneResult, sceneID) {
+function copyResults(sceneReport, sceneResult, bufPhoto, sceneID) {
     return	new Promise((resolve, reject) => {
         try {
             var zip = new AdmZip();
@@ -94,35 +89,28 @@ function copyResults(sceneReport, sceneResult, sceneID) {
             copy.report.reportDate = format(Date.now(), 'isoDateTime');
             copy.sceneID = sceneID;
             zip.addFile("scene.json", Buffer.from(JSON.stringify(copy), "utf8"));
-            zip.addLocalFile("./defaultSceneResult/scene.jpg");  // add local file          
-            zip.writeZip(getResultSceneFilePatch(sceneID));      // or write everything to disk
+            zip.addFile("scene.jpg", bufPhoto);
+            zip.writeZip(config.scene_results + sceneID + '.rec');      // or write everything to disk
             return resolve('zipResults-recognizedStep_1');
         }
         catch(err) {
             return reject( {type:"zipResults", data:err.toString()} );
         }
       });
-  };
+};
 
 function sceneRecognizedUpdateStatus(sceneID) { // creating archives
     return	new Promise((resolve, reject) => {
         try {
-            let buf = fs.readFileSync(getResultSceneFilePatch(sceneID))
+            let buf = fs.readFileSync(config.scene_results + sceneID+ '.rec')
             let md5hash = md5(buf);
-            sceneRecognized(sceneID, md5hash.toUpperCase())
+            db.sceneRecognized(sceneID, md5hash.toUpperCase())
             return resolve('sceneRecognizedUpdateStatus');
         }
         catch(err) {
             return reject( {type:"sceneRecognizedUpdateStatus", data:err.toString()} );
         }
-        
     });   
-  };
-
-function getResultSceneFilePatch(sceneID) {
-    return './scenes/result/'+sceneID+'.rec'
-  };
-    
-
+};
 
 export {unzipSceneFile, deleteFile, getSceneFile, sceneRecognizedUpdateStatus};
