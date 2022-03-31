@@ -477,11 +477,11 @@ function sendPostResult (url, scenes, resultFilePath, sceneID) {
             },
             "formData": formData
         }
-        var req = request(uploadOptions, function(err, resp, body) {
+        request(uploadOptions, function(err, resp, body) {
             if (err) {
-                addLogs({"thedate":getNowDate(), "sessionid":"", "status":"ERROR", "messagefrom":"server", "action":"sendToApi", "data":sceneID + ' : '+ err.toString()})
+                addLogs({"thedate":getNowDate(), "sessionid":"", "status":"ERROR", "messagefrom":"server", "action":"sendToApi", "data":sceneID + ' : ' + JSON.stringify(uploadOptions) + ' : '+ err.toString()})
             } else {
-                addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"server", "action":"sendToApi", "data":sceneID})
+                addLogs({"thedate":getNowDate(), "sessionid":"", "status":"GOOD", "messagefrom":"server", "action":"sendToApi", "data":sceneID + ' : ' + JSON.stringify(uploadOptions) })
             }
         });
     }); 
