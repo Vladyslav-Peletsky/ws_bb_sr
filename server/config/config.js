@@ -12,5 +12,4 @@ config.default_scene_result_path = process.cwd() + '/server/scenes/default_scene
 config.new_scene = process.cwd() + '/server/scenes/new_scene/';
 config.scene_results = process.cwd() + '/server/scenes/scene_results/';
 
-
 export {config};
