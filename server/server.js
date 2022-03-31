@@ -278,7 +278,7 @@ app.put('/onlinereco/scene/:sceneID', (req, res) => {
 });
  
 app.get('/onlinereco/scene/:sceneID', (req, res) => {
-    let scenePath = scene_results + req.params.sceneID + '.rec' 
+    let scenePath = config.scene_results + req.params.sceneID + '.rec' 
     res.download(scenePath);
 });
 
