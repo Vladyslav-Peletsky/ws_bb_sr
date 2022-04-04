@@ -762,14 +762,14 @@ function sendMessageWSClient (wsType, sessionId, message, close) {
                 return (conn.sessionId === sessionId) ? true : false;
             }).forEach(socket => {
                 socket.send(message);
-                if (close) socket.terminate();
+                if (close) socket.close();
             });
         } else {
             siteConnects.filter(conn => {
                 return (conn.siteSessionId === sessionId) ? true : false;
             }).forEach(socket => {
                 socket.send(message);
-                if (close) socket.terminate();
+                if (close) socket.close();
             });
         }
     } catch (err) {
