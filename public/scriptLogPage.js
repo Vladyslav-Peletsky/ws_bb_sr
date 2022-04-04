@@ -68,6 +68,7 @@ $(document).ready(function () {
                     'pageLength'
         ],
         columns: [
+            { data: "id", title: "id"},
             { data: "thedate", title: "TheDate"},
             { data: "status", title: "Status"},
             { data: "messagefrom", title: "MessageFrom"},

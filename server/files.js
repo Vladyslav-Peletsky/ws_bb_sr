@@ -7,6 +7,7 @@ import md5 from 'md5';
 
 function unzipSceneFile(sceneID, scenePath) {
     return	new Promise((resolve, reject) => {
+        console.log('unzipSceneFile', sceneID, scenePath)
         try {
             let sceneFolder = config.new_scene;
             var zip = new AdmZip(scenePath);
@@ -15,6 +16,7 @@ function unzipSceneFile(sceneID, scenePath) {
             return resolve('unzipSceneFile: '+sceneID); 
         }
         catch(err) {
+            console.log({type:"unzipSceneFile", data:err.toString()});
             if (err) return reject( {type:"unzipSceneFile", data:err.toString()} );
         }
     });  
@@ -22,6 +24,7 @@ function unzipSceneFile(sceneID, scenePath) {
 
 function deleteFile(scenePath) {
     return	new Promise((resolve, reject) => {
+        console.log('deleteFile', scenePath)
         fs.unlink(scenePath, function (err) {
             if (err) {
                 return reject( {type:"deleteFile", data:err.toString()} );
@@ -33,6 +36,7 @@ function deleteFile(scenePath) {
   };
 
 function getSceneFile(sceneID) { // creating archives
+    console.log('getSceneFile');
     return	new Promise((resolve, reject) => {
         let sceneFilePath = config.new_scene + sceneID+'.json';
         let sceneResult = {};
@@ -101,15 +105,12 @@ function copyResults(sceneReport, sceneResult, bufPhoto, sceneID) {
 
 function sceneRecognizedUpdateStatus(sceneID) { // creating archives
     return	new Promise((resolve, reject) => {
-        try {
-            let buf = fs.readFileSync(config.scene_results + sceneID+ '.rec')
-            let md5hash = md5(buf);
-            db.sceneRecognized(sceneID, md5hash.toUpperCase())
-            return resolve('sceneRecognizedUpdateStatus');
-        }
-        catch(err) {
-            return reject( {type:"sceneRecognizedUpdateStatus", data:err.toString()} );
-        }
+        let buf = fs.readFileSync(config.scene_results + sceneID+ '.rec')
+        let md5hash = md5(buf);
+
+        db.sceneRecognized(sceneID, md5hash.toUpperCase())
+        .then(() => {return resolve('sceneRecognizedUpdateStatus');})
+        .catch((err) => {return reject( {type:"sceneRecognizedUpdateStatus", data:err.toString()} );})
     });   
 };
 

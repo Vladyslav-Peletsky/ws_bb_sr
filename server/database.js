@@ -13,7 +13,7 @@ const pool = new Pool({
 
 function newSession(sessionId) {
   return	new Promise((resolve, reject) => {
-    pool.query('INSERT INTO dbo.ClientSessions (SessionID, isActive, CreateDate, UpdatedDate) VALUES ($1,1,to_timestamp($2 / 1000.0),to_timestamp($2 / 1000.0));',[sessionId,Date.now()], (err, res) => {
+    pool.query('INSERT INTO dbo.ClientSessions (SessionID, isActive, CreateDate, UpdatedDate) VALUES ($1, 1, now(), now() );',[sessionId], (err, res) => {
         if (err) return reject( {type:"newSession", data:err.toString()} );
         return resolve(JSON.stringify(res.rows));
       });
@@ -22,7 +22,7 @@ function newSession(sessionId) {
 
 function updateSession(sessionId, jsonMessage) {
   return	new Promise((resolve, reject) => {
-    pool.query('UPDATE dbo.ClientSessions SET DistributorID =$3,  VisitID = $4, DocumentID = $5, CustomerID =$6, EmployeeID =$7, Custom =$8, UpdatedDate = to_timestamp($2 / 1000.0) WHERE SessionID = $1;',[sessionId, Date.now(), jsonMessage.data.distributorID, jsonMessage.data.visitID, jsonMessage.data.documentID, jsonMessage.data.customerID, jsonMessage.data.employeeID, jsonMessage.data.custom], (err, res) => {
+    pool.query('UPDATE dbo.ClientSessions SET DistributorID =$2,  VisitID = $3, DocumentID = $4, CustomerID =$5, EmployeeID =$6, Custom =$7, UpdatedDate = now() WHERE SessionID = $1;',[sessionId, jsonMessage.data.distributorID, jsonMessage.data.visitID, jsonMessage.data.documentID, jsonMessage.data.customerID, jsonMessage.data.employeeID, jsonMessage.data.custom], (err, res) => {
         if (err) return reject( {type:"updateSession", data:err.toString()} );
         return resolve(JSON.stringify(res.rows));
     });
@@ -41,10 +41,10 @@ function deleteSession(sessionId) {
 function newScene(sessionId, sceneId) {
   let url = config.domain + 'onlinereco/scene/' + sceneId;
   return	new Promise((resolve, reject) => {
-      pool.query("INSERT INTO dbo.Scenes (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE SessionID = $1"+
+      pool.query("INSERT INTO dbo.Scenes (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom, CreateDate, UpdatedDate, ErrorCode, ErrorDescription) SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom, now(), now(), NULL, NULL FROM dbo.ClientSessions WHERE SessionID = $1"+
                  "ON CONFLICT (SceneID) " +
                  "DO " +
-                 "UPDATE SET (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom) = (SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom FROM dbo.ClientSessions WHERE SessionID = $1);",[sessionId,sceneId,url], (err, res) => {
+                 "UPDATE SET (SceneID, Processed, PutUrl, GetUrl, isActive, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom, UpdatedDate, ErrorCode, ErrorDescription) = (SELECT $2, 1, $3, $3, 1, DistributorID, VisitID, DocumentID, CustomerID, EmployeeID, Custom, now(), NULL, NULL FROM dbo.ClientSessions WHERE SessionID = $1);",[sessionId,sceneId,url], (err, res) => {
           if (err) return reject( {type:"newScene", data:err.toString()} );
           return resolve(JSON.stringify(res.rows));
       });
@@ -53,7 +53,7 @@ function newScene(sessionId, sceneId) {
 
 function finishNewScene(sceneId, checksum) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET Processed = 2, Checksum = $2 WHERE SceneID = $1;',[sceneId,checksum], (err, res) => {
+      pool.query('UPDATE dbo.Scenes SET Processed = 2, Checksum = $2, UpdatedDate = now() WHERE SceneID = $1;',[sceneId,checksum], (err, res) => {
           if (err) return reject( {type:"finishNewScene", data:err.toString()} );
           return resolve(JSON.stringify(res.rows));
       });
@@ -62,8 +62,17 @@ function finishNewScene(sceneId, checksum) {
 
 function sceneRecognized(sceneId, checksum) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET Processed = 3, Checksum = $2 WHERE SceneID = $1;',[sceneId, checksum], (err, res) => {
+      pool.query('UPDATE dbo.Scenes SET Processed = 3, Checksum = $2, UpdatedDate = now() WHERE SceneID = $1;',[sceneId, checksum], (err, res) => {
           if (err) return reject( {type:"sceneRecognized", data:err.toString()} );
+          return resolve(JSON.stringify(res.rows));
+      });
+    });
+};
+
+function errorScene(sceneId, erroCode, errorDescription) {
+  return	new Promise((resolve, reject) => {  
+      pool.query('UPDATE dbo.Scenes SET Processed = -1, ErrorCode = $2, ErrorDescription = $3 WHERE SceneID = $1;',[sceneId, erroCode, errorDescription], (err, res) => {
+          if (err) return reject( {type:"errorScene", data:err.toString()} );
           return resolve(JSON.stringify(res.rows));
       });
     });
@@ -71,7 +80,7 @@ function sceneRecognized(sceneId, checksum) {
 
 function deleteScene(sessionId, sceneId) {
   return	new Promise((resolve, reject) => {  
-      pool.query('UPDATE dbo.Scenes SET isActive = 0 WHERE SceneID = $1;',[sceneId], (err, res) => {
+      pool.query('UPDATE dbo.Scenes SET isActive = 0, UpdatedDate = now() WHERE SceneID = $1;',[sceneId], (err, res) => {
           if (err) return reject( {type:"deleteScene", data:err.toString()} );
           resolve(JSON.stringify(res.rows));
       });
@@ -80,13 +89,15 @@ function deleteScene(sessionId, sceneId) {
 
 function sceneStatuses(sessionId) {
   return new Promise((resolve, reject) => {
-      pool.query("SELECT s.SceneID, s.Processed, Checksum, PutUrl, GetUrl FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.SessionID = $1 AND s.isActive =1;",[sessionId], (err, res) => {
+      pool.query("SELECT s.SceneID, s.Processed, Checksum, PutUrl, GetUrl, ErrorCode, ErrorDescription FROM dbo.Scenes s INNER JOIN dbo.ClientSessions cs ON cs.VisitID=s.VisitID AND cs.DocumentID=s.DocumentID WHERE cs.SessionID = $1 AND s.isActive =1;",[sessionId], (err, res) => {
           if (err) return reject( {type:"sceneStatuses", data:err.toString()} );
           let sceneStatuses = {"type":"sceneStatuses"};
           sceneStatuses.data = res.rows;
           let result = JSON.stringify(sceneStatuses).replace(/sceneid/g, 'sceneID');
             result = result.replace(/puturl/g, 'putUrl');
             result = result.replace(/geturl/g, 'getUrl');
+            result = result.replace(/errorcode/g, 'errorCode');
+            result = result.replace(/errordescription/g, 'errorDescription');
           return resolve(result);
       });
   });
@@ -159,16 +170,20 @@ function getResultPhoto(distributorId) {
 
 function dbAddLog(log) {
   return	new Promise((resolve, reject) => {  
-      pool.query('INSERT INTO dbo.Logs (TheDate, Status, MessageFrom, Action, Data) VALUES ($1, $2, $3, $4, $5);',[log.thedate, log.status, log.messagefrom, log.action, log.data], (err, res) => {
-          if (err) return reject( {type:"dbAddLog", data:err.toString()} );
-          return resolve(JSON.stringify(res.rows));
+      pool.query('INSERT INTO dbo.Logs (TheDate, Status, MessageFrom, Action, Data) VALUES (now(), $1, $2, $3, $4);',[log.status, log.messagefrom, log.action, log.data], (err, res) => {
+          if (err) { return reject( {type:"dbAddLog", data:err.toString()} ); }
+          
+          pool.query('SELECT id, TheDate, Status, MessageFrom, Action, Data FROM dbo.Logs ORDER BY id DESC LIMIT 1;', (err, res) => {
+            if (err) return reject( {type:"getAllLogs", data:err.toString()} );
+            return resolve(JSON.stringify(res.rows));
+            });
+          });
       });
-    });
 };
 
-function getAllLogs(log) {
+function getAllLogs() {
   return	new Promise((resolve, reject) => {  
-      pool.query('SELECT TheDate, Status, MessageFrom, Action, Data FROM dbo.Logs;', (err, res) => {
+      pool.query('SELECT id, TheDate, Status, MessageFrom, Action, Data FROM dbo.Logs;', (err, res) => {
           if (err) return reject( {type:"getAllLogs", data:err.toString()} );
           return resolve(JSON.stringify(res.rows));
       });
@@ -185,4 +200,72 @@ function queryScript(sqlScript, data = []) {
 };
 
 
-export {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, deleteScene, sceneStatuses, setRecognitionResults, getRecognitionResults, getResultRowDetails, deleteResultRow, getResultReport, getResultPhoto, queryScript, dbAddLog, getAllLogs};
+
+function getErrors() {
+  return	new Promise((resolve, reject) => {  
+      pool.query('SELECT ID, DistributorID, RecognitionType, ActionType, ErrorCode, ErrorDescription, HTTPStatusCode, WSClose FROM dbo.GenerateErrors ORDER BY id DESC;', (err, res) => {
+          if (err) return reject( {type:"getErrors", data:err.toString()} );
+          return resolve(res.rows);
+      });
+    });
+};
+
+function setError(distributorId, recognitionType, actionType, errorCode, errorDescription, httpStatusCode, wsClose) {
+  return	new Promise((resolve, reject) => {  
+      pool.query('INSERT INTO dbo.GenerateErrors (DistributorID, RecognitionType, ActionType, ErrorCode, ErrorDescription, HTTPStatusCode, WSClose) SELECT $1, $2, $3, $4, $5, $6, $7;', [distributorId, recognitionType, actionType, errorCode, errorDescription, httpStatusCode, wsClose], (err, res) => {
+          if (err) return reject( {type:"setError", data:err.toString()} );
+          return resolve(res.rows);
+      });
+    });
+};
+
+function deleteErrorRow(id) {
+  return	new Promise((resolve, reject) => {  
+      pool.query('DELETE FROM dbo.GenerateErrors WHERE ID = $1;', [id], (err, res) => {
+          if (err) return reject( {type:"deleteErrorRow", data:err.toString()} );
+          return resolve(res.rows);
+      });
+    });
+};
+
+function getDistrIdBySceneId(sceneid) {
+  return	new Promise((resolve, reject) => {  
+      pool.query("SELECT DistributorID FROM dbo.Scenes WHERE SceneID = $1 LIMIT 1;", [sceneid], (err, res) => {
+          if (err) return reject( {type:"getDistrIdBySceneId", data:err.toString()} );
+          return resolve(res.rows[0]);
+      });
+    });
+};
+
+function checkErrorBySessionID(recognitionType, actionType, sessionId) {
+  return	new Promise((resolve, reject) => {  
+      pool.query("SELECT tbl.ID, tbl.DistributorID, tbl.RecognitionType, tbl.ActionType, tbl.ErrorCode, tbl.ErrorDescription, tbl.HTTPStatusCode, tbl.WSClose "+
+                 "FROM ("+
+                 "SELECT ID, DistributorID, RecognitionType, ActionType, ErrorCode, ErrorDescription, HTTPStatusCode, WSClose, 0 AS OrderBy FROM dbo.GenerateErrors WHERE DistributorID != '-1' AND RecognitionType = $1 AND ActionType = $2 UNION "+
+                 "SELECT ID, DistributorID, RecognitionType, ActionType, ErrorCode, ErrorDescription, HTTPStatusCode, WSClose, 1 AS OrderBy FROM dbo.GenerateErrors WHERE DistributorID = '-1' AND RecognitionType = $1 AND ActionType = $2 "+
+                 ") tbl "+
+                 "LEFT JOIN dbo.ClientSessions cs ON tbl.DistributorID = cs.DistributorID OR tbl.DistributorID = '-1' "+
+                 "WHERE cs.SessionID = $3 "+
+                 "ORDER BY tbl.ID DESC, tbl.OrderBy LIMIT 1;", [recognitionType, actionType, sessionId], (err, res) => {
+          if (err) return reject( {type:"checkError", data:err.toString()} );
+          return resolve(res.rows[0]);
+      });
+    });
+};
+
+function checkErrorByDistributorID(recognitionType, actionType, distributorId) {
+  return	new Promise((resolve, reject) => {  
+      pool.query("SELECT tbl.ID, tbl.DistributorID, tbl.RecognitionType, tbl.ActionType, tbl.ErrorCode, tbl.ErrorDescription, tbl.HTTPStatusCode, tbl.WSClose "+
+                 "FROM ("+
+                 "SELECT ID, DistributorID, RecognitionType, ActionType, ErrorCode, ErrorDescription, HTTPStatusCode, WSClose, 0 AS OrderBy FROM dbo.GenerateErrors WHERE DistributorID != '-1' AND RecognitionType = $1 AND ActionType = $2 UNION "+
+                 "SELECT ID, DistributorID, RecognitionType, ActionType, ErrorCode, ErrorDescription, HTTPStatusCode, WSClose, 1 AS OrderBy FROM dbo.GenerateErrors WHERE DistributorID = '-1' AND RecognitionType = $1 AND ActionType = $2 "+
+                 ") tbl "+
+                 "WHERE tbl.DistributorID = $3 OR tbl.DistributorID = '-1' "+
+                 "ORDER BY tbl.ID DESC, tbl.OrderBy LIMIT 1;", [recognitionType, actionType, distributorId], (err, res) => {
+          if (err) return reject( {type:"checkError", data:err.toString()} );
+          return resolve(res.rows[0]);
+      });
+    });
+};
+
+export {newSession, updateSession, deleteSession, newScene, finishNewScene, sceneRecognized, errorScene, deleteScene, sceneStatuses, setRecognitionResults, getRecognitionResults, getResultRowDetails, deleteResultRow, getResultReport, getResultPhoto, queryScript, dbAddLog, getAllLogs, getErrors, setError, deleteErrorRow, checkErrorBySessionID, checkErrorByDistributorID, getDistrIdBySceneId};
