@@ -81,11 +81,11 @@ app.ws('/onlinereco', (ws, req) => {
                                         .then((result) => { sendMessageWSClient('online', sessionId, result, false) })
                                         .catch(function (err) { sendErrorToWsClientOnlineProject(err, jsonMessage.type, null, null, sessionId); });
                                 } else {
-                                    let data = { type: "error", data: { requestType: jsonMessage.type, errorCode: resultErrorCode, errorDescription: result.errordescription } };
+                                    let data = { type: "error", data: { requestType: jsonMessage.type, errorCode: result.errorcode, errorDescription: result.errordescription } };
                                     sendMessageWSClient('online', sessionId, JSON.stringify(data), result.wsclose);
                                 }
                             }))
-                        .catch(function (err) { sendErrorToWsClientOnlineProject(err, jsonMessage.type, null, null, sessionId); });
+                        .catch(function (err) { console.log(err); sendErrorToWsClientOnlineProject(err, jsonMessage.type, null, null, sessionId); });
 
                     break;
 
@@ -103,13 +103,13 @@ app.ws('/onlinereco', (ws, req) => {
                                                         .catch(function (err) { sendErrorToWsClientOnlineProject(err, jsonMessage.type, null, null, sessionId); });
                                                 } else {
                                                     db.errorScene(jsonMessage.data.sceneID, result.errorcode, result.errordescription)
-                                                    db.sceneStatuses(sessionId)
-                                                        .then((result) => { sendMessageWSClient('online', sessionId, result, false) })
+                                                        .then(() => db.sceneStatuses(sessionId)
+                                                            .then((result) => { sendMessageWSClient('online', sessionId, result, false) }))
                                                         .catch(function (err) { sendErrorToWsClientOnlineProject(err, jsonMessage.type, null, null, sessionId); });
                                                 }
                                             }))
                                 } else {
-                                    let data = { type: "error", data: { requestType: jsonMessage.type, errorCode: resultErrorCode, errorDescription: result.errordescription } };
+                                    let data = { type: "error", data: { requestType: jsonMessage.type, errorCode: result.errorcode, errorDescription: result.errordescription } };
                                     sendMessageWSClient('online', sessionId, JSON.stringify(data), result.wsclose);
                                 }
                             }))
@@ -162,7 +162,7 @@ app.ws('/onlinereco', (ws, req) => {
                                         })
 
                                 } else {
-                                    let data = { type: "error", data: { requestType: jsonMessage.type, errorCode: resultErrorCode, errorDescription: result.errordescription } };
+                                    let data = { type: "error", data: { requestType: jsonMessage.type, errorCode: result.errorcode, errorDescription: result.errordescription } };
                                     sendMessageWSClient('online', sessionId, JSON.stringify(data), result.wsclose);
                                 }
                             }))
@@ -280,7 +280,7 @@ function sendErrorToWsClientOnlineProject(err, actionType, errorCode, sceneId = 
     return new Promise((resolve, reject) => {
         let wsType = 'online';
         errorCode = (errorCode !== null) ? errorCode : 'ERROR_INTERNAL_SERVER_ERROR';
-        let defaultMessage = '{"type":"error", "data":{"requestType":"' + actionType + '", "errorCode":"' + errorCode + '", "errorDescription":' + JSON.stringify(err) + '}}';
+        let defaultMessage = '{"type":"error", "data":{"requestType":"' + actionType + '", "errorCode":"' + errorCode + '", "errorDescription":' + JSON.stringify(err.type) +' : '+ JSON.stringify(err.data) + '}}';
 
         switch (actionType) {
             case "newConnection": case "closeConnection": case "connection":
