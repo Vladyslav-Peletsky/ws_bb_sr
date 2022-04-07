@@ -520,12 +520,13 @@ function sendPostResult(url, scenes, resultFilePath, sceneID) {
             "formData": formData
         }
         
-        request(uploadOptions, function (err, resp, body) {
+        request(uploadOptions, function (err, responce, body) {
             if (err) {
                 addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: ERROR: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) + ' : ' + err.toString() });
                 return reject('error_sendPostResult'+err.toString());
             } else {
                 addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) });
+                addLogs({ "project": "offline", "fromto": "client >> server", "data": "responce_sendToApi: <br>" + sceneID + ' : ' + JSON.stringify(responce) });
                 return resolve('done_sendPostResult');
             }
         });
