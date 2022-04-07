@@ -71,22 +71,24 @@
                   Type</label>
                 <select id="recognitionType" class="form-control" name="recognitionType" required>
                   <option>online</option>
-                  <!--<option>offline</option>-->
+                  <option>offline</option>
                 </select>
               </div>
               <div class="form-group col-md-4">
                 <span style="color:red;">*</span> <label for="actionType" class="control-label">Action Type</label>
                 <select id="actionType" class="form-control" name="actionType" required>
-                  <option>connection (global)</option>
-                  <option>scene (global)</option>
-                  <option>scene (scene)</option>
-                  <option>finish (global)</option>
-                  <option>finish (before processed 2)</option>
-                  <option>finish (before processed 3)</option>
-                  <option>status</option>
-                  <option>delete</option>
-                  <option>putScene</option>
-                  <option>getScene</option>
+                  <!--<option>online_connection (global)</option>
+                  <option>online_scene (global)</option>
+                  <option>online_scene (scene)</option>
+                  <option>online_finish (global)</option>
+                  <option>online_finish (before processed 2)</option>
+                  <option>online_finish (before processed 3)</option>
+                  <option>online_status</option>
+                  <option>online_delete</option>
+                  <option>online_putScene</option>
+                  <option>online_getScene</option>
+                  <option>offline_global</option>
+                  <option>offline_scene</option>-->
                 </select>
               </div>
             </div>
@@ -123,17 +125,17 @@
                 <input type="text" class="form-control" id="errorDescription" placeholder="errorDescription"
                   name="errorDescription">
               </div>
-              <div class="form-group col-md-2">
+              <div class="form-group col-md-2" id="wsCloseField">
                 <span style="color:red;">*</span> <label for="wsClose" class="control-label">WS CLOSE Connection</label>
                 <select id="wsClose" class="form-control" name="wsClose" required>
                   <option label="close connection" value="true" selected>close</option>
                   <option label="stay open connection" value="false">stay open</option>
                 </select>
               </div>
-              <div class="form-group col-md-2">
-                <label for="httpStatusCode" class="control-label">HTTP Status Code</label>
+              <div class="form-group col-md-2" id="httpStatusCodeField" style="display: none;">
+                <span style="color:red;">*</span> <label for="httpStatusCode" class="control-label">HTTP Status Code</label>
                 <input type="number" class="form-control" id="httpStatusCode" placeholder="httpStatusCode"
-                  name="httpStatusCode">
+                  name="httpStatusCode" disabled required>
               </div>
             </div>
 

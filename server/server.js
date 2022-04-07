@@ -3,7 +3,7 @@ import * as db from './database.js';
 import { unzipSceneFile, deleteFile, getSceneFile, sceneRecognizedUpdateStatus } from './files.js';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
-import express from 'express';
+import express, { json } from 'express';
 import expressWs from 'express-ws';
 import Busboy from 'busboy';
 import request from 'request';
@@ -24,7 +24,7 @@ getDefaultRecResData().then(function (result) { defaultRecResData = result; })
     .then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.Scenes (Id serial primary key, SceneID uuid UNIQUE NOT NULL, Processed integer NOT NULL, ErrorCode text NULL, ErrorDescription text NULL, PutUrl text, GetUrl text, Checksum text NULL, isActive int NOT NULL, DistributorID text NOT NULL, VisitID text NOT NULL, DocumentID text NOT NULL, CustomerID text NOT NULL, EmployeeID text NOT NULL, Custom text NULL, CreateDate timestamp NOT NULL, UpdatedDate timestamp NOT NULL)"))
     .then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.ClientSessions (Id serial primary key, SessionID uuid NOT NULL, isActive integer, DistributorID text NULL, VisitID text NULL, DocumentID text NULL, CustomerID text NULL, EmployeeID text NULL, Custom text NULL, CreateDate timestamp NOT NULL, UpdatedDate timestamp NOT NULL)"))
     //.then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.RecognitionResults (Id serial primary key, DistributorID text UNIQUE NOT NULL, RecognitionStatus text NOT NULL, RecognitionReport text NOT NULL, RecognitionPhoto bytea NOT NULL)"))
-    .then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.GenerateErrors (Id serial primary key, DistributorID text NOT NULL, RecognitionType text NOT NULL, ActionType text NOT NULL, ErrorCode text NULL, ErrorDescription text NULL, WSClose BOOLEAN DEFAULT false NOT NULL, HTTPStatusCode integer NULL)"))
+    .then(() => db.queryScript("CREATE TABLE IF NOT EXISTS dbo.GenerateErrors (Id serial primary key, DistributorID text NOT NULL, RecognitionType text NOT NULL, ActionType text NOT NULL, ErrorCode text NULL, ErrorDescription text NULL, WSClose text NULL, HTTPStatusCode integer NULL)"))
     //.then(() => db.queryScript("INSERT INTO dbo.RecognitionResults (DistributorID, RecognitionStatus, RecognitionReport, RecognitionPhoto) VALUES ($1, $2, $3, $4)", defaultRecResData))
     .then(() => addLogs({ "project": "internal", "fromto": "server >> server", "data": "Init DB: Successful" }, false))
     .catch(function (err) {
@@ -74,7 +74,7 @@ app.ws('/onlinereco', (ws, req) => {
                 case 'connection':
                     addLogs({ "project": "online", "fromto": "client >> server", "data": JSON.stringify(jsonMessage) })
                         .then(() => db.updateSession(sessionId, jsonMessage))
-                        .then(() => db.checkErrorBySessionID('online', 'connection (global)', sessionId)
+                        .then(() => db.checkErrorBySessionID('online', 'online_connection (global)', sessionId)
                             .then(function (result) {
                                 if (result === undefined) {
                                     db.sceneStatuses(sessionId)
@@ -91,11 +91,11 @@ app.ws('/onlinereco', (ws, req) => {
 
                 case 'scene':
                     addLogs({ "project": "online", "fromto": "client >> server", "data": JSON.stringify(jsonMessage) })
-                        .then(() => db.checkErrorBySessionID('online', 'scene (global)', sessionId)
+                        .then(() => db.checkErrorBySessionID('online', 'online_scene (global)', sessionId)
                             .then(function (result) {
                                 if (result === undefined) {
                                     db.newScene(sessionId, jsonMessage.data.sceneID)
-                                        .then(() => db.checkErrorBySessionID('online', 'scene (scene)', sessionId)
+                                        .then(() => db.checkErrorBySessionID('online', 'online_scene (scene)', sessionId)
                                             .then(function (result) {
                                                 if (result === undefined) {
                                                     db.sceneStatuses(sessionId)
@@ -122,10 +122,10 @@ app.ws('/onlinereco', (ws, req) => {
                     let sceneJsonPath = config.new_scene + jsonMessage.data.sceneID + '.json';
 
                     addLogs({ "project": "online", "fromto": "client >> server", "data": JSON.stringify(jsonMessage) })
-                        .then(() => db.checkErrorBySessionID('online', 'finish (global)', sessionId)
+                        .then(() => db.checkErrorBySessionID('online', 'online_finish (global)', sessionId)
                             .then(function (result) {
                                 if (result === undefined) {
-                                    db.checkErrorBySessionID('online', 'finish (before processed 2)', sessionId)
+                                    db.checkErrorBySessionID('online', 'online_finish (before processed 2)', sessionId)
                                         .then(function (result) {
                                             if (result === undefined) {
                                                 unzipSceneFile(jsonMessage.data.sceneID, scenePath)
@@ -133,7 +133,7 @@ app.ws('/onlinereco', (ws, req) => {
                                                     .then(() => db.finishNewScene(jsonMessage.data.sceneID, jsonMessage.data.checksum))
                                                     .then(() => db.sceneStatuses(sessionId)
                                                         .then((result) => { sendMessageWSClient('online', sessionId, result, false) }))
-                                                    .then(() => db.checkErrorBySessionID('online', 'finish (before processed 3)', sessionId)
+                                                    .then(() => db.checkErrorBySessionID('online', 'online_finish (before processed 3)', sessionId)
                                                         .then(function (result) {
                                                             if (result === undefined) {
                                                                 getSceneFile(jsonMessage.data.sceneID)
@@ -172,7 +172,7 @@ app.ws('/onlinereco', (ws, req) => {
 
                 case 'status':
                     addLogs({ "project": "online", "fromto": "client >> server", "data": JSON.stringify(jsonMessage) })
-                        .then(() => db.checkErrorBySessionID('online', 'status', sessionId)
+                        .then(() => db.checkErrorBySessionID('online', 'online_status', sessionId)
                             .then(function (result) {
                                 if (result === undefined) {
                                     db.sceneStatuses(sessionId)
@@ -190,7 +190,7 @@ app.ws('/onlinereco', (ws, req) => {
 
                 case 'delete':
                     addLogs({ "project": "online", "fromto": "client >> server", "data": JSON.stringify(jsonMessage) })
-                        .then(() => db.checkErrorBySessionID('online', 'delete', sessionId)
+                        .then(() => db.checkErrorBySessionID('online', 'online_delete', sessionId)
                             .then(function (result) {
                                 if (result === undefined) {
                                     db.deleteScene(sessionId, jsonMessage.data.sceneID)
@@ -227,7 +227,7 @@ app.put('/onlinereco/scene/:sceneID', (req, res) => {
     req.on('end', function () {
 
         db.getDistrIdBySceneId(req.params.sceneID)
-            .then((result) => db.checkErrorByDistributorID('online', 'putScene', (typeof result !== 'undefined') ? result.distributorid : '-1')
+            .then((result) => db.checkErrorByDistributorID('online', 'online_putScene', (typeof result !== 'undefined') ? result.distributorid : '-1')
                 .then(function (result) {
                     if (result === undefined) {
                         answer(200, 'ok');
@@ -252,7 +252,7 @@ app.get('/onlinereco/scene/:sceneID', (req, res) => {
     let scenePath = config.scene_results + req.params.sceneID + '.rec'
 
     db.getDistrIdBySceneId(req.params.sceneID)
-        .then((result) => db.checkErrorByDistributorID('online', 'getScene', (typeof result !== 'undefined') ? result.distributorid : '-1')
+        .then((result) => db.checkErrorByDistributorID('online', 'online_getScene', (typeof result !== 'undefined') ? result.distributorid : '-1')
             .then(function (result) {
                 if (result === undefined) {
                     answer(200, null, scenePath);
@@ -280,7 +280,7 @@ function sendErrorToWsClientOnlineProject(err, actionType, errorCode, sceneId = 
     return new Promise((resolve, reject) => {
         let wsType = 'online';
         errorCode = (errorCode !== null) ? errorCode : 'ERROR_INTERNAL_SERVER_ERROR';
-        let defaultMessage = '{"type":"error", "data":{"requestType":"' + actionType + '", "errorCode":"' + errorCode + '", "errorDescription":' + JSON.stringify(err.type) +' : '+ JSON.stringify(err.data) + '}}';
+        let defaultMessage = '{"type":"error", "data":{"requestType":"' + actionType + '", "errorCode":"' + errorCode + '", "errorDescription":' + JSON.stringify(err.type) + ' : ' + JSON.stringify(err.data) + '}}';
 
         switch (actionType) {
             case "newConnection": case "closeConnection": case "connection":
@@ -374,12 +374,12 @@ function sendMessageWSClient(project, sessionId, message, close) {
             if (project === 'online') {
                 connects.filter(conn => { return (conn.sessionId === sessionId) ? true : false; }).forEach(socket => {
                     socket.send(message);
-                    if (close) socket.close();
+                    if (close === 'true') socket.close();
                 });
             } else if (project === 'site (LogPage)') {
                 siteConnects.filter(conn => { return (conn.siteSessionId === sessionId) ? true : false; }).forEach(socket => {
                     socket.send(message);
-                    if (close) socket.close();
+                    if (close === 'true') socket.close();
                 });
             }
         })
@@ -392,65 +392,141 @@ function sendMessageWSClient(project, sessionId, message, close) {
 //recognition  OFFLINE
 app.post('/offlinereco', (req, res) => {
     var busboy = new Busboy({ headers: req.headers });
-    let answer = [];
+    let data = { answer: [] }
     addLogs({ "project": "offline", "fromto": "client >> server", "data": JSON.stringify(req.headers) })
 
     busboy.on('field', (fieldname, file, filename, encoding, mimetype) => {
-        let sceneIDUpload = JSON.parse(file)[0].sceneID;
-        answer = JSON.parse(file);
-        answer[0].responseStatus = 201;
-        delete answer[0].fileName;
-        delete answer[0].fileChecksum;
-        delete answer[0].documentRecognitionStatusCode;
+        try {
+            data.sceneIdUpload = JSON.parse(file)[0].sceneID;
+            data.resulturl = JSON.parse(JSON.stringify(req.headers))['result-url'];
+            data.documentRecognitionStatusCode = JSON.parse(file)[0].documentRecognitionStatusCode;
+            data.distributorid = JSON.parse(file)[0].distributorID;
 
-        let resulturl = JSON.parse(JSON.stringify(req.headers))['result-url'];
-        let documentRecognitionStatusCode = JSON.parse(file)[0].documentRecognitionStatusCode;
-        if (documentRecognitionStatusCode == 'NeedRecognition') {
-            sleep(10000)
-                .then(() => unzipSceneFile(sceneIDUpload, config.new_scene + sceneIDUpload + '.rec'))
-                .then(() => deleteFile(config.new_scene + sceneIDUpload + '.rec'))
-                .then(() => getSceneFile(sceneIDUpload))
-                .then(() => deleteFile(config.new_scene + sceneIDUpload + '.json'))
-                .then(() => sendPostResult(resulturl, answer, config.scene_results + sceneIDUpload + '.rec', sceneIDUpload))
-                .catch(function (err) {
-                    addLogs({ "project": "offline", "fromto": "client >> server", "data": "Error: <br>" + err.toString() })
-                });
+            data.filePath_NewScene = config.new_scene + data.sceneIdUpload + '.rec';
+            data.filePath_NewSceneJson = config.new_scene + data.sceneIdUpload + '.json';
+            data.filePath_Result = config.scene_results + data.sceneIdUpload + '.rec';
+
+            data.answer = JSON.parse(file);
+            data.httpstatuscode = 207; //correct request
+
+            data.answer[0].responseStatus = 201;
+            delete data.answer[0].fileName;
+            delete data.answer[0].fileChecksum;
+            delete data.answer[0].documentRecognitionStatusCode;
+        } catch {
+            data.httpstatuscode = 400; //incorrect request
         }
     });
+
     busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
-        addLogs({ "project": "offline", "fromto": "client >> server", "data": "sceneID: " + fieldname })
+        addLogs({ "project": "offline", "fromto": "client >> server", "data": "sceneID: " + fieldname });
         file.pipe(fs.createWriteStream(config.new_scene + fieldname + '.rec'));
     });
+
     busboy.on('finish', function () {
-        res.setHeader("Content-Type", "application/json");
-        res.status(207).json(answer);
-        res.end();
+        if (data.httpstatuscode === 400) {
+            answer(data.httpstatuscode, data);
+        } else {
+            db.checkErrorByDistributorID('offline', 'offline_global', (typeof data.distributorid !== 'undefined') ? data.distributorid : '-1')
+                .then((result) => {
+                    if (result === undefined) {
+                        db.checkErrorByDistributorID('offline', 'offline_scene', (typeof data.distributorid !== 'undefined') ? data.distributorid : '-1')
+                            .then((result) => {
+                                if (result === undefined) {
+                                    if (data.documentRecognitionStatusCode == 'NeedRecognition') {
+                                        unzipSceneFile(data.sceneIdUpload, data.filePath_NewScene)
+                                            .then(() => deleteFile(data.filePath_NewScene))
+                                            .then(() => getSceneFile(data.sceneIdUpload))
+                                            .then(() => deleteFile(data.filePath_NewSceneJson))
+                                            .then(() => sendPostResult(data.resulturl, data.answer, data.filePath_Result, data.sceneIdUpload))
+                                            .then(() => { 
+                                                answer(data.httpstatuscode, data.answer); 
+                                            })
+                                            .catch(function (err) {
+                                                data.httpstatuscode = 500;
+                                                answer(data.httpstatuscode, err);
+                                                addLogs({ "project": "offline", "fromto": "client >> server", "data": "Error: <br>" + err.toString() })
+                                                    .catch(function (err) {
+                                                        console.log('offlinereco_NeedRecognition: ' + err.toString());
+                                                    });
+                                            });
+                                    } else {
+                                        fs.access(data.filePath_Result, fs.constants.F_OK, (err) => { //check result scene file exists
+                                            if (err) {
+                                                data.answer[0].responseStatus = 404;
+                                                answer(data.httpstatuscode, data.answer);
+                                            } else {
+                                                sendPostResult(data.resulturl, data.answer, data.filePath_Result, data.sceneIdUpload)
+                                                .then(() => { 
+                                                    answer(data.httpstatuscode, data.answer);
+                                                })
+                                                .catch(function (err) {
+                                                    addLogs({ "project": "offline", "fromto": "client >> server", "data": "Error: <br>" + err.toString() })
+                                                        .catch(function (err) {
+                                                            console.log('offlinereco_sendPostResult: ' + err.toString());
+                                                        });
+                                                });
+                                            }
+                                        })
+                                    }
+                                } else {
+                                    data.answer[0].responseStatus = result.httpstatuscode;
+                                    answer(data.httpstatuscode, data.answer);
+                                }
+                            })
+                            .catch(function (err) {
+                                answer(500, err.toString());
+                            });
+                    } else {
+                        answer(result.httpstatuscode, { errorCode: result.errorcode, errorDescription: result.errordescription });
+                    }
+                })
+                .catch(function (err) {
+                    answer(500, err.toString());
+                });
+        }
+
+        function answer(httpstatuscode, body) {
+            addLogs({ "project": "offline", "fromto": "server >> client", "data": "httpCode: " + httpstatuscode + " body: " + JSON.stringify(body) })
+                .catch(function (err) {
+                    console.log('offlinereco_answer: ' + err.toString());
+                });
+
+            res.setHeader("Content-Type", "application/json");
+            res.status(httpstatuscode).json(body);
+            res.end();
+        };
+
     });
     return req.pipe(busboy);
 });
 
 function sendPostResult(url, scenes, resultFilePath, sceneID) {
-    delete scenes[0].responseStatus;
-    scenes[0].fileName = sceneID + '.rec';
+    let scenesClone = JSON.parse(JSON.stringify(scenes));
+    delete scenesClone[0].responseStatus;
+    scenesClone[0].fileName = sceneID + '.rec';
 
     return new Promise((resolve, reject) => {
         var formData = {
-            'scenes': JSON.stringify(scenes),
+            'scenes': JSON.stringify(scenesClone),
             [sceneID]: fs.createReadStream(resultFilePath)
         };
         var uploadOptions = {
             "url": url,
             "method": "POST",
             "headers": {
-                "Token": "8CEB1B0C-1FEB-48EA-8F96-BB4DDBBB06D9"
+                "Token": config.offline_api_token
             },
             "formData": formData
         }
+        
         request(uploadOptions, function (err, resp, body) {
             if (err) {
-                addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: ERROR: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) + ' : ' + err.toString() })
+                addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: ERROR: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) + ' : ' + err.toString() });
+                return reject('error_sendPostResult'+err.toString());
             } else {
-                addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) })
+                addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) });
+                return resolve('done_sendPostResult');
             }
         });
     });

@@ -14,9 +14,13 @@ $(document).ready(function () {
         let distributorId = document.getElementById('distributorId').value;
         let recognitionType = document.getElementById('recognitionType').value;
         let actionType = document.getElementById('actionType').value;
+        let httpStatusCodeShowField = false; 
+        if ($('#recognitionType').val() === 'offline' || ($('#actionType').val() === 'putScene' || $('#actionType').val() === 'getScene')) {
+            httpStatusCodeShowField = true;
+        }
+        console.log(httpStatusCodeShowField, $('#httpStatusCode').val());
 
-
-        if (distributorId && recognitionType && actionType) {
+        if (distributorId && recognitionType && actionType && ((httpStatusCodeShowField === false) || ( httpStatusCodeShowField === true && $('#httpStatusCode').val() !=='' )) ) {
             var data = new FormData($('#errorForm')[0]);
             // data.append("CustomField", "This is some extra data, testing");
             $("#setError").prop("disabled", true);
@@ -76,8 +80,51 @@ $(document).ready(function () {
     //reset form Add Error on hide modal
     $("#addErrorModal").on('hide.bs.modal', function () {
         document.getElementById("errorForm").reset();
-
+        selectActionTypes();
+        showHideFileds();
     });
+
+    //show Add Error modal on click button Add
+    $('#recognitionType').on('change', function () {
+        showHideFileds();
+    });
+
+    $('#actionType').on('change', function () {
+        showHideFileds();
+    });
+
+    function showHideFileds(){
+        if ( $('#recognitionType').val() === 'offline' || ($('#actionType').val() === 'putScene' || $('#actionType').val() === 'getScene') ) {
+            $('#httpStatusCode').prop("disabled", false);
+            $('#httpStatusCodeField').show();
+            $('#wsClose').prop("disabled", true);
+            $('#wsCloseField').hide();
+        } else {
+            $('#httpStatusCode').val('');
+            $('#httpStatusCode').prop("disabled", true);
+            $('#httpStatusCodeField').hide();
+            $('#wsClose').prop("disabled", false);
+            $('#wsCloseField').show();
+        }
+    };
+
+    var actionTypes = {
+        online:["online_connection (global)","online_scene (global)","online_scene (scene)","online_finish (global)","online_finish (before processed 2)","online_finish (before processed 3)","online_status","online_delete","online_putScene","online_getScene"],
+        offline:["offline_global","offline_scene"]
+      };
+      var recognitionType = document.getElementById("recognitionType");
+      var recognitionType = document.querySelector("#recognitionType");
+      window.onload = selectActionTypes;
+      recognitionType.onchange = selectActionTypes;
+      
+      function selectActionTypes(ev){
+        actionType.innerHTML = "";
+        var c = this.value || "online", o;
+        for(let i = 0; i < actionTypes[c].length; i++){
+          o = new Option(actionTypes[c][i],actionTypes[c][i],false,false);
+          actionType.add(o);
+        };
+      }
 
     /*-----------------------------------EVENTS END------------------------------------------------------------------------*/
 

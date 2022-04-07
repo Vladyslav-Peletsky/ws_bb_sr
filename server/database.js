@@ -213,7 +213,10 @@ function getErrors() {
 function setError(distributorId, recognitionType, actionType, errorCode, errorDescription, httpStatusCode, wsClose) {
   return new Promise((resolve, reject) => {
     pool.query('INSERT INTO dbo.GenerateErrors (DistributorID, RecognitionType, ActionType, ErrorCode, ErrorDescription, HTTPStatusCode, WSClose) SELECT $1, $2, $3, $4, $5, $6, $7;', [distributorId, recognitionType, actionType, errorCode, errorDescription, httpStatusCode, wsClose], (err, res) => {
-      if (err) return reject({ type: "setError", data: err.toString() });
+      if (err) {
+      console.log(err);
+        return reject({ type: "setError", data: err.toString() });
+    }
       return resolve(res.rows);
     });
   });

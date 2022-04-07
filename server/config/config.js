@@ -6,6 +6,8 @@ config.domain = 'https://ws-bb-sr.herokuapp.com/';
 config.dbPostgresURI = 'postgres://txstbteobiwucu:4f3b9f560b347b9a39b035edace61fddeb5d8f93d6635779f69b215d746e43b9@ec2-54-247-137-184.eu-west-1.compute.amazonaws.com:5432/d6sct12bbs92ns';
 config.db_name = 'd6sct12bbs92ns';
 
+config.offline_api_token = '8CEB1B0C-1FEB-48EA-8F96-BB4DDBBB06D9';
+
 //PATH
 config.public_path = process.cwd() + '/public/';
 config.server_path = process.cwd() + '/server/';
