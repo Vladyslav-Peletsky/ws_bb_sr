@@ -24,8 +24,35 @@
       </ul>
     </div>
   </nav>
-  <div class="container">
-    <h1> info </h1>
+  <div class="container mt-3">
+    <h3 class="text-left">BlackBox standard recognition</h3>
+    <p class="text-left">BlackBox simulate recognition service offline and online integration.</p>
+    <p class="text-left">With this blackbox, you have possibility to view logs, generate results or errors what will be sent to the client.</p>
+    <br>
+    <h3 class="text-left">API</h3>
+    <div class="alert alert-primary" role="alert">
+    <p>Offline: <code id="offline_api"></code></p>
+    <p>Online:  <code id="online_api" ></code></p>
+    </div>
+    <br>
+    <h3 class="text-left">Tabs</h3>
+    <h5 class="text-left text-secondary">Log</h5>
+    <p class="text-left">Shows a log of all client or server activity in real time.</p>
+    <br>
+    <h5 class="text-left text-secondary">Recognized Results</h5>
+    <p class="text-left">Tab for adding recognition results to be sent to the client</p>
+    <p class="text-left">if no results are set for DistributorID, the default result (DistributorID = -1) is sent to the client</p>
+    <p class="text-left">SCENE FORMAT JSON: <code>{ "report": { recognition report } }</code></p>
+    <br>
+    <h5 class="text-left text-secondary">Generate Errors</h5>
+    <p class="text-left">Tab for generating errors that will be sent to the client</p>
   </div>
 </body>
+<script>
+    let offline_host = location.origin.replace(/^http:\/\//, 'https://');
+    let online_host = offline_host.replace(/^http/, 'ws');
+
+    document.getElementById('offline_api').innerHTML = offline_host;
+    document.getElementById('online_api').innerHTML = online_host;
+</script>
 </html>
