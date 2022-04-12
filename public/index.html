@@ -49,9 +49,10 @@
   </div>
 </body>
 <script>
-    let offline_host = location.origin.replace(/^http:\/\//, 'https://');
-    let online_host = offline_host.replace(/^http/, 'ws');
-
+    let host = location.origin.replace(/^http:\/\//, 'https://');
+    let offline_host = host+'/offlinereco';
+    let online_host  = host.replace(/^http/, 'ws')+'/onlinereco';
+    
     document.getElementById('offline_api').innerHTML = offline_host;
     document.getElementById('online_api').innerHTML = online_host;
 </script>

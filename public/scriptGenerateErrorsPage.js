@@ -15,10 +15,9 @@ $(document).ready(function () {
         let recognitionType = document.getElementById('recognitionType').value;
         let actionType = document.getElementById('actionType').value;
         let httpStatusCodeShowField = false; 
-        if ($('#recognitionType').val() === 'offline' || ($('#actionType').val() === 'putScene' || $('#actionType').val() === 'getScene')) {
+        if ($('#recognitionType').val() === 'offline' || ($('#recognitionType').val() === 'online' && ($('#actionType').val() === 'online_putScene' || $('#actionType').val() === 'online_getScene'))) {
             httpStatusCodeShowField = true;
         }
-        console.log(httpStatusCodeShowField, $('#httpStatusCode').val());
 
         if (distributorId && recognitionType && actionType && ((httpStatusCodeShowField === false) || ( httpStatusCodeShowField === true && $('#httpStatusCode').val() !=='' )) ) {
             var data = new FormData($('#errorForm')[0]);
@@ -94,7 +93,7 @@ $(document).ready(function () {
     });
 
     function showHideFileds(){
-        if ( $('#recognitionType').val() === 'offline' || ($('#actionType').val() === 'putScene' || $('#actionType').val() === 'getScene') ) {
+        if ( $('#recognitionType').val() === 'offline' || ($('#actionType').val() === 'online_putScene' || $('#actionType').val() === 'online_getScene') ) {
             $('#httpStatusCode').prop("disabled", false);
             $('#httpStatusCodeField').show();
             $('#wsClose').prop("disabled", true);

@@ -294,17 +294,13 @@ function sendErrorToWsClientOnlineProject(err, actionType, errorCode, sceneId = 
             case "delete":
                 switch (err.type) {
                     case 'deleteScene':
-                        console.log('deleteScene_1');
                         db.errorScene(sceneId, 'ERROR_INTERNAL_SERVER_ERROR', 'action: delete, err: ' + JSON.stringify(err.data))
                             .then(() => db.sceneStatuses(sessionId)
                                 .then(function (result) {
-                                    console.log('deleteScene_3');
-                                    console.log(result);
                                     sendMessageWSClient(wsType, sessionId, result, false);
                                     return resolve();
                                 }))
                             .catch(function (err) {
-                                console.log('getError_delete_error', JSON.stringify(err.data));
                                 sendMessageWSClient(wsType, sessionId, defaultMessage, true);
                                 return reject();
                             });
