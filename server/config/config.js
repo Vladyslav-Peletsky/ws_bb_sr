@@ -1,7 +1,7 @@
 let config = {};
 
 //GLOBAL
-config.domain = 'https://ws-bb-sr-demo.herokuapp.com/';
+config.domain = process.env.DOMAIN;
 config.dbPostgresURI = process.env.DATABASE_URL;
 config.offline_api_token = process.env.OFFLINE_API_TOKEN;
 
