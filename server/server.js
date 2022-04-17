@@ -434,10 +434,8 @@ app.post('/offlinereco', (req, res) => {
                                             .then(() => deleteFile(data.filePath_NewScene))
                                             .then(() => getSceneFile(data.sceneIdUpload))
                                             .then(() => deleteFile(data.filePath_NewSceneJson))
+                                            .then(() => answer(data.httpstatuscode, data.answer))
                                             .then(() => sendPostResult(data.resulturl, data.answer, data.filePath_Result, data.sceneIdUpload))
-                                            .then(() => { 
-                                                answer(data.httpstatuscode, data.answer); 
-                                            })
                                             .catch(function (err) {
                                                 data.httpstatuscode = 500;
                                                 answer(data.httpstatuscode, err);
@@ -452,10 +450,8 @@ app.post('/offlinereco', (req, res) => {
                                                 data.answer[0].responseStatus = 404;
                                                 answer(data.httpstatuscode, data.answer);
                                             } else {
-                                                sendPostResult(data.resulturl, data.answer, data.filePath_Result, data.sceneIdUpload)
-                                                .then(() => { 
-                                                    answer(data.httpstatuscode, data.answer);
-                                                })
+                                                answer(data.httpstatuscode, data.answer)
+                                                .then(() => sendPostResult(data.resulturl, data.answer, data.filePath_Result, data.sceneIdUpload))
                                                 .catch(function (err) {
                                                     addLogs({ "project": "offline", "fromto": "client >> server", "data": "Error: <br>" + err.toString() })
                                                         .catch(function (err) {
@@ -521,8 +517,8 @@ function sendPostResult(url, scenes, resultFilePath, sceneID) {
                 addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: ERROR: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) + ' : ' + err.toString() });
                 return reject('error_sendPostResult'+err.toString());
             } else {
-                addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) });
-                addLogs({ "project": "offline", "fromto": "client >> server", "data": "responce_sendToApi: <br>" + sceneID + ' : ' + JSON.stringify(responce) });
+                addLogs({ "project": "offline", "fromto": "server >> client", "data": "sendToApi: <br>" + sceneID + ' : ' + JSON.stringify(uploadOptions) })
+                .then (() => addLogs({ "project": "offline", "fromto": "client >> server", "data": "responce_sendToApi: <br>" + sceneID + ' : ' + JSON.stringify(responce) }));
                 return resolve('done_sendPostResult');
             }
         });
