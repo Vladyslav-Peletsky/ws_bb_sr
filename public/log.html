@@ -32,9 +32,16 @@
     .connectionOn {
       color:green;
     }
+	
     .connectionOff {
       color:red;
     }
+	
+	table.dataTable tbody th,
+	table.dataTable tbody td {
+	  padding: 8px 10px;
+	  min-width: 100px;
+	}
   </style>
 </head>
 <body>
@@ -59,7 +66,7 @@
        
 <div class="container-fluid mt-3">
   <span style="font-size: 20px; font-weight: 600; display: block;" class="mb-3" id="statusConnection"></span>
-  <table id="example" class="table" width="100%"></table>
+  <table id="example" class="table" width="100%; word-break:break-all;"></table>
 </div>
 
 </body>
