@@ -435,6 +435,7 @@ app.post('/offlinereco', (req, res) => {
                                             .then(() => getSceneFile(data.sceneIdUpload))
                                             .then(() => deleteFile(data.filePath_NewSceneJson))
                                             .then(() => answer(data.httpstatuscode, data.answer))
+                                            .then(() => sleep(20000))
                                             .then(() => sendPostResult(data.resulturl, data.answer, data.filePath_Result, data.sceneIdUpload))
                                             .catch(function (err) {
                                                 data.httpstatuscode = 500;
